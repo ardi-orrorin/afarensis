@@ -1,0 +1,109 @@
+.container {
+  width: inherit;
+  max-height: 10vh;  
+  display: flex;
+  padding: 2vh 0.5rem;
+}
+
+.container > div:first-child {
+  padding: 0 10px;
+  display: flex;
+  justify-content: start;
+}
+
+.container > div:first-child > button {
+  all:unset;
+  width: 30px;
+  height: 30px;
+  border-radius: 100%;
+  font-size: 0.8rem;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.container > div:nth-child(n+2) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+}
+
+
+.container > div:nth-child(n+2) > div {
+  position: relative;
+  width: 150px;
+  height: 30px;
+  display: flex;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
+  cursor: pointer;  
+  margin: 0px;
+}
+
+
+
+.container > div:nth-child(n+2) > div  > div {
+  border-bottom-left-radius: 10px;
+  border-top-left-radius: 10px;
+  width: 120px;
+  height: inherit;
+  display: flex;
+  align-items: center;
+  margin: 0px;
+  background-color: white;
+  font-size: 0.8rem;
+  transition: 0.3s;
+}
+
+
+
+.container > div:nth-child(n+2) > div  > div:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+  color: white;
+}
+
+.container > div:nth-child(n+2)  > div > div > p:first-child {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 20px;
+  margin: 0px;
+  border-right: 1px solid gray;
+}
+
+.container > div:nth-child(n+2)  > div > div > p:nth-child(2) {
+  padding-left: 10px;
+  width: 100px;
+  margin: 0px;
+}
+
+.container > div:nth-child(n+2) > div > button {
+  all: unset;
+  width: 40px;
+  height: inherit;
+  background-color: rgba(255, 100, 100, 1);
+  color: white;
+  font-size: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  transition: 0.3s;
+}
+
+.container > div:nth-child(n+2) > button:hover {
+  background-color: rgba(255, 0, 0, 1);
+}
+
+.active {
+  background-color: rgba(10, 100, 200, 1) !important;
+  color: white;  
+}
+
+.active > p:first-child {
+  border-right: 1px solid white !important;
+}

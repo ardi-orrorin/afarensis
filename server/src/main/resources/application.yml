@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: afarensis
+  cloud:
+    config:
+      enabled: false

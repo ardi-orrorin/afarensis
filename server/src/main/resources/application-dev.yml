@@ -1,0 +1,61 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/afarensis?currentSchema=afarensis&serverTimezone=Asia/Seoul
+    username: postgres
+    password: root
+    hikari:
+      maximum-pool-size: 21
+
+  devtools:
+    livereload:
+      enabled: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration/postgres
+    validate-on-migrate: true
+    validate-migration-naming: true
+
+jwt:
+  secret: c2R2c2RsdmlqZHM7dmlqYTsnb3NkaWpmYW85d2V1cndhZWxrbnZtbC54Y252bGl6dXhjaHZwOHN2OGloamFzO2RsdmtuY
+
+#file:
+#  storage:
+#    dir: /Users/yuseungcheol/Desktop/test
+
+pageable:
+  page: 1
+  size: 20
+
+#logging:
+#  level:
+#    com.anamensis.server.mapper: trace
+#  file:
+#    path: ./logs
+
+management:
+  server:
+    port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, metrics, refresh
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  metrics:
+    tags:
+      application: "server"
