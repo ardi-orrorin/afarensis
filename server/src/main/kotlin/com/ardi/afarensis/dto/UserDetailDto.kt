@@ -7,11 +7,11 @@ data class UserDetailDto(
     val id: Long,
     val userId: String,
     val pwd: String,
-    val roles: List<Role>,
+    val roles: MutableSet<Role> = mutableSetOf(),
     val profileImg: String
-): UserDetails {
+) : UserDetails {
     override fun getAuthorities(): List<GrantedAuthority> {
-        return roles.map { role -> GrantedAuthority { role.toString() }}
+        return roles.map { role -> GrantedAuthority { role.toString() } }
             .toList()
     }
 

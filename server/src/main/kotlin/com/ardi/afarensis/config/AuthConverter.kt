@@ -15,7 +15,7 @@ import java.util.*
 class AuthConverter(
     val tokenProvider: TokenProvider,
     val userService: UserService,
-): ServerAuthenticationConverter {
+) : ServerAuthenticationConverter {
     val ACCESS_COOKIE_NAME = "access_token"
     val REFRESH_COOKIE_NAME = "refresh_token"
     val COOKIE_NAME = "Bearer"
@@ -23,7 +23,6 @@ class AuthConverter(
     override fun convert(exchange: ServerWebExchange): Mono<Authentication> {
         val headers = exchange.request.headers
         var auth = headers.getFirst("Authorization")
-
         val cookies = headers.getOrEmpty("Cookie")
 
         if (auth != null && auth.startsWith(COOKIE_NAME + " ")) {
@@ -37,16 +36,17 @@ class AuthConverter(
                     val tokens = cookie.split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                     val accessToken = Arrays.stream<String>(tokens)
                         .filter { c: String -> c.contains(ACCESS_COOKIE_NAME) }.findFirst().orElse("")
-                    val refreshToken = Arrays.stream<String>(tokens)
-                        .filter { c: String -> c.contains(REFRESH_COOKIE_NAME) }.findFirst().orElse("")
+//                    val refreshToken = Arrays.stream<String>(tokens)
+//                        .filter { c: String -> c.contains(REFRESH_COOKIE_NAME) }.findFirst().orElse("")
 
                     if (!accessToken.isEmpty()) {
                         return isValidateToken(accessToken.split("=".toRegex()).dropLastWhile { it.isEmpty() }
                             .toTypedArray()[1])
-                    } else if (!refreshToken.isEmpty()) {
-                        return isValidateToken(refreshToken.split("=".toRegex()).dropLastWhile { it.isEmpty() }
-                            .toTypedArray()[1])
                     }
+//                    else if (!refreshToken.isEmpty()) {
+//                        return isValidateToken(refreshToken.split("=".toRegex()).dropLastWhile { it.isEmpty() }
+//                            .toTypedArray()[1])
+//                    }
                 }
             }
         }

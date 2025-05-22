@@ -46,10 +46,11 @@ class SecurityConfig : WebFluxConfigurer {
 
     private fun authorizeExchange(exchange: AuthorizeExchangeSpec): AuthorizeExchangeSpec {
         return exchange
-            .pathMatchers("/", "/index.html", "/static/**", "/*.js", "/*.css", "/*.ico", "/*.png").permitAll()
-            .pathMatchers("/api/**").hasAuthority("USER")
-            .pathMatchers("/admin/**").hasAuthority("ADMIN")
-            .anyExchange().authenticated()
+            .pathMatchers("/api/v1/public/**").permitAll()
+            .pathMatchers("/api/v1/private/user/**").hasAuthority("USER")
+            .pathMatchers("/api/v1/private/admin/**").hasAuthority("ADMIN")
+            .pathMatchers("/api/v1/private/master/**").hasAuthority("ADMIN")
+            .anyExchange().permitAll()
     }
 
     @Bean

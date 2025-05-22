@@ -98,23 +98,22 @@ val npmPath = "/opt/homebrew/bin/npm" // npm 실행 파일 경로 (Mac의 경우
 
 
 val deleteClientBuild by tasks.registering(Delete::class) {
-    delete("$projectDir/src/main/resources/static") // Spring Boot의 static 폴더 내용 삭제
+    delete("$projectDir/src/main/resources/static")
 }
 
-// 1. React 의존성 설치 Task (npm install)
 val installClient by tasks.registering(Exec::class) {
-    val clientDir = file("$projectDir/../client") // React 프로젝트 디렉터리 (상위 폴더의 client)
-    workingDir(clientDir) // 작업 디렉터리를 React 프로젝트로 설정
-    inputs.dir(clientDir) // 입력 디렉터리 (변경 감지용)
-    group = BasePlugin.BUILD_GROUP // Gradle UI 그룹 설정
+    val clientDir = file("$projectDir/../client")
+    workingDir(clientDir)
+    inputs.dir(clientDir)
+    group = BasePlugin.BUILD_GROUP
 
     // OS에 따라 npm 명령어 실행
     if (System.getProperty("os.name").lowercase(Locale.ROOT).contains("windows")) {
-        commandLine("npm.cmd", "audit", "fix") // 취약점 자동 수정 (선택 사항)
-        commandLine("npm.cmd", "install")      // 의존성 설치
+        commandLine("npm.cmd", "audit", "fix")
+        commandLine("npm.cmd", "i")
     } else {
         commandLine(npmPath, "audit", "fix")
-        commandLine(npmPath, "install")
+        commandLine(npmPath, "i")
     }
 }
 
@@ -126,7 +125,7 @@ val buildClient by tasks.registering(Exec::class) {
     group = BasePlugin.BUILD_GROUP
 
     if (System.getProperty("os.name").lowercase(Locale.ROOT).contains("windows")) {
-        commandLine("npm.cmd", "run-script", "build") // React 빌드 스크립트 실행
+        commandLine("npm.cmd", "run-script", "build")
     } else {
         commandLine(npmPath, "run", "build")
     }
