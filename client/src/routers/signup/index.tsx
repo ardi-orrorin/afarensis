@@ -1,20 +1,23 @@
-import { z } from 'zod';
 import styles from './index.module.css';
 import { useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { AxiosError } from 'axios';
 import signUpService from './[features]/services/api';
+import { SignUp } from './[features]/types/signUp';
+import signUpSchema from './[features]/types/signUpSchema';
+import { CommonType } from '../../commons/types/commonType';
+import commonFunc from '../../commons/services/funcs';
 
 const Index = () => {
-  const [signUp, setSignUp] = useState({} as SignUpInputType);
-  const [errors, setErrors] = useState({} as FormErrors);
+  const [signUp, setSignUp] = useState({} as SignUp.SignUpInput);
+  const [errors, setErrors] = useState({} as CommonType.FormErrors<SignUp.SignUpInput>);
 
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   const isValid = useMemo(() => {
-    return SignUpInputSchema.safeParse(signUp).success;
+    return signUpSchema.Input.safeParse(signUp).success;
   }, [signUp]);
 
   const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,23 +26,19 @@ const Index = () => {
       [e.target.name]: e.target.value,
     });
 
-    const result = SignUpInputSchema.safeParse(signUp);
+    const result =
+      signUpSchema.Input.safeParse(signUp);
 
-    if (!result.success) {
-      const filesErrors = result.error.flatten().fieldErrors;
+    const fieldErrors = result.success
+      ? {}
+      : result.error.flatten().fieldErrors;
 
-      const subtractRequired = Object.entries(filesErrors)
-        .filter(([key, value]) => {
-          return value[0] !== 'Required';
-        })
-        .reduce((acc, [key, value]) => {
-          acc[key] = value;
-          return acc;
-        }, {} as FormErrors);
+    const subtractRequired =
+      commonFunc.subtractRequiredStr(fieldErrors);
 
-      setErrors(subtractRequired);
-      setLoading(false);
-    }
+    setErrors(subtractRequired);
+    setLoading(false);
+
   };
 
   const onClickHandler = async () => {
@@ -62,8 +61,8 @@ const Index = () => {
 
 
   const resetHandler = () => {
-    setSignUp({} as z.infer<typeof SignUpInputSchema>);
-    setErrors({} as FormErrors);
+    setSignUp({} as SignUp.SignUpInput);
+    setErrors({} as CommonType.FormErrors<SignUp.SignUpInput>);
   };
 
   return (
@@ -134,24 +133,6 @@ const Index = () => {
 
 export default Index;
 
-const SignUpInputSchema = z.object({
-  userId: z.string().min(4, '아이디는 4글자 이상이어야 합니다.'),
-  email: z.string().email('이메일 형식이 아닙니다.'),
-  pwd: z.string().min(4, '비밀번호는 4글자 이상이어야 합니다.'),
-  confirmPwd: z.string().min(4, '비밀번호는 4글자 이상이어야 합니다.'),
-}).refine((data) => {
-    return data.pwd === data.confirmPwd;
-  }, {
-    message: '비밀번호가 일치하지 않습니다.',
-    path: ['confirmPwd'],
-  },
-);
 
-type SignUpInputType = z.infer<typeof SignUpInputSchema>;
 
-type FormErrors = {
-  [key in keyof SignUpInputType]?: string;
-} & {
-  [key: string]: string [] | undefined;
-}
 

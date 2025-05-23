@@ -1,4 +1,6 @@
 import { CommonType } from '../../../../commons/types/commonType';
+import { z } from 'zod';
+import signInSchema from './signInSchema';
 
 interface RequestI {
   userId: string,
@@ -14,8 +16,10 @@ interface TokenI {
   roles: CommonType.Role[];
 }
 
+type InputT = z.infer<typeof signInSchema.Input>;
 
 export namespace SignIn {
   export type Request = RequestI;
   export type Token = TokenI;
+  export type Input = InputT;
 }

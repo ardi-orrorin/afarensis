@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { SignIn } from './[features]/types/signin';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './index.module.css';
@@ -7,20 +7,38 @@ import signInService from './[features]/services/api';
 import { useSignInToken } from '../../commons/hooks/useSiginInToken';
 import { useCookies } from 'react-cookie';
 import signInFunc from './[features]/funcs/signin';
+import { CommonType } from '../../commons/types/commonType';
+import signInSchema from './[features]/types/signInSchema';
+import commonFunc from '../../commons/services/funcs';
 
 
 const Index = () => {
 
-  const [login, setLogin] = useState({} as SignIn.Request);
+  const [login, setLogin] = useState({} as SignIn.Input);
+  const [errors, setErrors] = useState({} as CommonType.FormErrors<SignIn.Input>);
   const [loading, setLoading] = useState(false);
   const pwdRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { setToken } = useSignInToken();
-  const [cookies, setCookie, removeCookie] = useCookies(['access_token', 'refresh_token', 'user_id']);
+  const [_, setCookie, __] = useCookies(['access_token', 'refresh_token', 'user_id']);
 
+
+  const isValid = useMemo(() => {
+    return signInSchema.Input.safeParse(login).success;
+  }, [login]);
 
   const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLogin({ ...login, [e.target.name]: e.target.value });
+
+    const result = signInSchema.Input.safeParse(login);
+
+    const fieldErrors = result.success
+      ? {}
+      : result.error.flatten().fieldErrors;
+
+
+    const subtractRequired = commonFunc.subtractRequiredStr(fieldErrors);
+    setErrors(subtractRequired);
   };
 
   const onClickSubmitHandler = async () => {
@@ -44,7 +62,7 @@ const Index = () => {
         data.userId,
         signInFunc.createCookieOption({ expiresIn: data.refreshTokenExpiresIn }),
       );
-      
+
       setToken(data);
 
       navigate('/');
@@ -78,6 +96,11 @@ const Index = () => {
                      pwdRef.current?.focus();
                    }}
             />
+            {
+              errors?.userId
+              && errors.userId.length > 0
+              && <p>{errors.userId}</p>
+            }
             <input name={'pwd'}
                    ref={pwdRef}
                    value={login.pwd ?? ''}
@@ -90,9 +113,14 @@ const Index = () => {
                      onClickSubmitHandler();
                    }}
             />
+            {
+              errors.pwd
+              && errors.pwd.length > 0
+              && <p>{errors.pwd}</p>
+            }
           </div>
           <button onClick={onClickSubmitHandler}
-                  disabled={loading}
+                  disabled={loading || isValid}
           >
             {'>'}
           </button>

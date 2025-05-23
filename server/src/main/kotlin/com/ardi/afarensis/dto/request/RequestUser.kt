@@ -30,8 +30,17 @@ class RequestUser {
     data class RefreshToken(
         @field:NotBlank(message = "리프레시 토큰을 입력해주세요.")
         val refreshToken: String,
-        @field:NotBlank(message = "유저 아이디를 입력해주세요.    ")
+        @field:NotBlank(message = "유저 아이디를 입력해주세요.")
         val userId: String,
+    ) {}
+
+    data class ResetPassword(
+        @field:NotBlank(message = "유저 아이디를 입력해주세요.")
+        val userId: String,
+        @field:NotBlank(message = "비밀번호를 입력해주세요.")
+        @field:Email(message = "이메일 형식이 아닙니다.")
+        val email: String,
+        val code: String?,
     ) {}
 
 }

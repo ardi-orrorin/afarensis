@@ -7,6 +7,7 @@ import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseUser
 import com.ardi.afarensis.provider.TokenProvider
 import com.ardi.afarensis.repository.UserRepository
+import com.ardi.afarensis.util.StringUtil
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import org.springframework.data.domain.Sort
@@ -25,6 +26,7 @@ class UserService(
     private val userRepository: UserRepository,
     private val bCryptPasswordEncoder: BCryptPasswordEncoder,
     private val tokenProvider: TokenProvider,
+    private val stringUtil: StringUtil,
 ) : ReactiveUserDetailsService {
 
     override fun findByUsername(username: String?): Mono<UserDetails> {
@@ -84,7 +86,7 @@ class UserService(
         val refreshToken = async {
             tokenProvider.generateToken(userDto.userId, true)
         };
-        
+
 
         user.addRefreshToken(refreshToken.await(), Instant.now().plus(tokenProvider.REFRESH_EXP, ChronoUnit.SECONDS))
 
@@ -138,6 +140,48 @@ class UserService(
         ResponseStatus(
             ResStatus.SUCCESS,
             "Sign out success",
+            true,
+        )
+    }
+
+    @Transactional
+    suspend fun sendVerifyCode(req: RequestUser.ResetPassword) = supervisorScope {
+        val user = userRepository.findByUserId(req.userId)
+            ?: throw RuntimeException("User not found")
+
+        if (user.email != req.email) {
+            throw RuntimeException("Email not matched")
+        }
+
+        val verifyCode = stringUtil.generateStr(6)
+
+        // TODO: send email
+    }
+
+
+    @Transactional
+    suspend fun resetPassword(req: RequestUser.ResetPassword) = supervisorScope {
+        if (req.code.isNullOrEmpty()) {
+            throw RuntimeException("Invalid verification code")
+        }
+
+        val user = userRepository.findByUserId(req.userId)
+            ?: throw RuntimeException("User not found")
+
+
+        val verifyEmail = user.userVerifyEmails.find { it.verifyKey == req.code }
+            ?: throw RuntimeException("Invalid verification code")
+        if (verifyEmail.expiredAt.isBefore(Instant.now())) {
+            throw RuntimeException("Email verification token expired")
+        }
+
+        val newPwd = bCryptPasswordEncoder.encode(stringUtil.generateStr(10))
+        user.pwd = newPwd
+        userRepository.save(user)
+
+        ResponseStatus(
+            ResStatus.SUCCESS,
+            "Password reset success",
             true,
         )
     }

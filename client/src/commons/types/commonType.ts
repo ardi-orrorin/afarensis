@@ -33,6 +33,12 @@ type PublishRefreshTokenT = {
   userId: string;
 }
 
+type FormErrorsT<T> = {
+  [key in keyof T]?: string;
+} & {
+  [key: string]: string [] | undefined;
+}
+
 export namespace CommonType {
   export type CreateQueryActions<T> = CreateQueryActionsT<T>;
   export type GetQuery<T> = GetQueryT<T>;
@@ -40,6 +46,7 @@ export namespace CommonType {
   export type HistoryPages = HistoryPageT[];
   export type ResponseStatus<T> = ResponseStatusT<T>;
   export type PublishRefreshToken = PublishRefreshTokenT;
+  export type FormErrors<T> = FormErrorsT<T>;
 
   export enum ResStatus {
     SUCCESS = 'SUCCESS',

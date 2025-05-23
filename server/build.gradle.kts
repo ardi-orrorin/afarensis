@@ -83,9 +83,6 @@ allOpen {
     annotation("jakarta.persistence.Embeddable")
 }
 
-//tasks.withType<Test> {
-//    useJUnitPlatform()
-//}
 
 val staticResourceDir = "src/main/resources/static"
 
@@ -112,11 +109,20 @@ val copyClientBuildToStaticResources by tasks.registering(Copy::class) {
     into(file(staticResourceDir))
 }
 
+gradle.taskGraph.whenReady {
+    val hasTestTasks = allTasks.any { it.name.contains("test", ignoreCase = true) }
+
+    if (hasTestTasks) {
+        copyClientBuildToStaticResources.get().enabled = false
+        deletePreviousClientBuild.get().enabled = false
+        println("Skipping client build")
+    }
+}
+
 
 tasks.named("processResources") {
     dependsOn(copyClientBuildToStaticResources)
 }
-
 
 tasks.named("bootJar") {
     dependsOn(copyClientBuildToStaticResources)
@@ -125,4 +131,8 @@ tasks.named("bootJar") {
 
 tasks.named("build") {
     dependsOn(copyClientBuildToStaticResources)
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

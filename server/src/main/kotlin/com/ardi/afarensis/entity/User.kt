@@ -3,6 +3,8 @@ package com.ardi.afarensis.entity
 import com.ardi.afarensis.dto.UserDetailDto
 import com.ardi.afarensis.dto.UserDto
 import jakarta.persistence.*
+import org.hibernate.annotations.DialectOverride.Where
+import org.hibernate.dialect.PostgreSQLDialect
 import java.time.Instant
 
 
@@ -11,7 +13,7 @@ import java.time.Instant
 class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0,
+    var id: Long = 0L,
     var userId: String = "",
     var pwd: String = "",
     var email: String = "",
@@ -21,7 +23,12 @@ class User(
     var userRoles: MutableSet<UserRole> = mutableSetOf(),
 
     @OneToOne(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
-    var userRefreshToken: UserRefreshToken? = null
+    var userRefreshToken: UserRefreshToken? = null,
+
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
+
+    @Where(override = org.hibernate.annotations.Where(clause = "available = true"), dialect = PostgreSQLDialect::class)
+    var userVerifyEmails: MutableList<UserVerifyEmail> = mutableListOf(),
 ) {
     fun toUserDetailDto() = UserDetailDto(
         id = id,

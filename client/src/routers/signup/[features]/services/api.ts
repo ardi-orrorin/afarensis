@@ -1,5 +1,5 @@
 import ExAxios from '../../../../commons/services/exAxios';
-import { SignUp } from '../types/singUp';
+import { SignUp } from '../types/signUp';
 
 const postSingUp = async (req: SignUp.Request) => {
   return ExAxios({

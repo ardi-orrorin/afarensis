@@ -19,7 +19,7 @@ class TokenProvider {
     private var SECRET_KEY: SecretKey? = null
 
     // 일 * 시 * 분 * 초
-    val ACCESS_EXP: Long = (24 * 60 * 60).toLong()
+    val ACCESS_EXP: Long = (5 * 60).toLong()
     val REFRESH_EXP: Long = (30 * 24 * 60 * 60).toLong()
 
     fun generateToken(userId: String?, isRefresh: Boolean): String {

@@ -46,6 +46,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 15px
 }
 
 .login-input > div > input {
@@ -53,8 +54,14 @@
     padding: 0.5rem;
     border: 1px solid #ccc;
     border-radius: 0.5rem;
-    margin-bottom: 1rem;
     outline: none;
+    margin: 0;
+}
+
+.login-input > div > p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: crimson;
 }
 
 .login-input > button {
