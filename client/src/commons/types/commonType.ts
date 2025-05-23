@@ -22,9 +22,42 @@ type HistoryPageT = {
   isOpen: boolean;
 };
 
+type ResponseStatusT<T> = {
+  status: CommonType.ResStatus;
+  message: string;
+  data: T;
+};
+
+type PublishRefreshTokenT = {
+  refreshToken: string;
+  userId: string;
+}
+
 export namespace CommonType {
   export type CreateQueryActions<T> = CreateQueryActionsT<T>;
   export type GetQuery<T> = GetQueryT<T>;
   export type HistoryPage = HistoryPageT;
   export type HistoryPages = HistoryPageT[];
+  export type ResponseStatus<T> = ResponseStatusT<T>;
+  export type PublishRefreshToken = PublishRefreshTokenT;
+
+  export enum ResStatus {
+    SUCCESS = 'SUCCESS',
+    FAILED = 'FAILED',
+    ERROR = 'ERROR',
+    NOT_FOUND = 'NOT_FOUND',
+    BAD_REQUEST = 'BAD_REQUEST',
+    UNAUTHORIZED = 'UNAUTHORIZED',
+    FORBIDDEN = 'FORBIDDEN',
+    INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR'
+  }
+
+  export enum Role {
+    ADMIN = 'ADMIN',
+    USER = 'USER',
+    GUEST = 'GUEST',
+    MASTER = 'MASTER'
+  }
+
+
 }

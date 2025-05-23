@@ -1,18 +1,17 @@
 spring:
   jpa:
     hibernate:
-
       ddl-auto: none
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     properties:
       hibernate:
-
         format_sql: true
         show_sql: true
         use_sql_comments: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/afarensis?currentSchema=afarensis&serverTimezone=Asia/Seoul
@@ -45,7 +44,7 @@ pageable:
 
 #logging:
 #  level:
-#    com.anamensis.server.mapper: trace
+#    com.: trace
 #  file:
 #    path: ./logs
 

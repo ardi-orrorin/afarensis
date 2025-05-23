@@ -1,5 +1,3 @@
-import java.util.*
-
 plugins {
     kotlin("jvm") version "2.1.21"
     kotlin("plugin.spring") version "2.1.21"
@@ -8,6 +6,7 @@ plugins {
     id("org.hibernate.orm") version "6.6.13.Final"
     id("org.graalvm.buildtools.native") version "0.10.6"
     kotlin("plugin.jpa") version "1.9.25"
+    id("com.github.node-gradle.node")
 }
 
 group = "com.ardi"
@@ -37,6 +36,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.flywaydb:flyway-core")
@@ -55,6 +56,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }
 
 dependencyManagement {
@@ -81,66 +83,46 @@ allOpen {
     annotation("jakarta.persistence.Embeddable")
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+//tasks.withType<Test> {
+//    useJUnitPlatform()
+//}
+
+val staticResourceDir = "src/main/resources/static"
+
+val deletePreviousClientBuild by tasks.registering(Delete::class) {
+    group = "build"
+    delete(file(staticResourceDir))
 }
 
-tasks.withType<Exec> {
-    val npmExecutablePath = "/opt/homebrew/bin"
-    val systemPath = System.getenv("PATH")
-    environment("PATH", "$npmExecutablePath:$systemPath")
-    //환경 변수 추가 해도 npm 못찾는 오류
-}
+val copyClientBuildToStaticResources by tasks.registering(Copy::class) {
+    group = "build"
 
+    dependsOn(deletePreviousClientBuild)
 
-val clientDir = file("$projectDir/../client")
-val npmPath = "/opt/homebrew/bin/npm" // npm 실행 파일 경로 (Mac의 경우)
+    val clientBuild = project(":client")
+        .tasks.named<com.github.gradle.node.npm.task.NpmTask>("buildClient")
 
-
-val deleteClientBuild by tasks.registering(Delete::class) {
-    delete("$projectDir/src/main/resources/static")
-}
-
-val installClient by tasks.registering(Exec::class) {
-    val clientDir = file("$projectDir/../client")
-    workingDir(clientDir)
-    inputs.dir(clientDir)
-    group = BasePlugin.BUILD_GROUP
-
-    // OS에 따라 npm 명령어 실행
-    if (System.getProperty("os.name").lowercase(Locale.ROOT).contains("windows")) {
-        commandLine("npm.cmd", "audit", "fix")
-        commandLine("npm.cmd", "i")
-    } else {
-        commandLine(npmPath, "audit", "fix")
-        commandLine(npmPath, "i")
+    clientBuild.configure {
+        environment.put("BUILD", System.getenv("BUILD") ?: "DEV")
     }
+
+    dependsOn(clientBuild)
+
+    from(project(":client").file("build"))
+    into(file(staticResourceDir))
 }
 
-
-val buildClient by tasks.registering(Exec::class) {
-    dependsOn(installClient)
-    workingDir(clientDir)
-    inputs.dir(clientDir)
-    group = BasePlugin.BUILD_GROUP
-
-    if (System.getProperty("os.name").lowercase(Locale.ROOT).contains("windows")) {
-        commandLine("npm.cmd", "run-script", "build")
-    } else {
-        commandLine(npmPath, "run", "build")
-    }
-}
-
-val copyClientBuildFiles by tasks.registering(Copy::class) {
-    dependsOn(buildClient)
-    from("$clientDir/build")
-    into("$projectDir/src/main/resources/static")
-}
 
 tasks.named("processResources") {
-    dependsOn(copyClientBuildFiles)
+    dependsOn(copyClientBuildToStaticResources)
 }
 
+
 tasks.named("bootJar") {
-    dependsOn(copyClientBuildFiles)
+    dependsOn(copyClientBuildToStaticResources)
+}
+
+
+tasks.named("build") {
+    dependsOn(copyClientBuildToStaticResources)
 }

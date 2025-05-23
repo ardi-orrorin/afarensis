@@ -1,0 +1,16 @@
+.basic-error-container {
+    display: flex;
+    height: inherit;
+    width: inherit;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    gap: 1rem;
+}
+
+.basic-error-container > div:first-child {
+    font-size: 3rem;
+    font-weight: 700;
+}

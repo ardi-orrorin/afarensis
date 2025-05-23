@@ -3,9 +3,11 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 
-import { Link, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { HistoryPageProvider } from '../commons/hooks/usehisotryPage';
 import HistoryPage from '../commons/components/HistoryPage';
+import LeftNavigator from '../commons/components/LeftNavigator';
+import { SignInTokenProvider } from '../commons/hooks/useSiginInToken';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -13,17 +15,17 @@ dayjs.extend(timezone);
 const RootLayout = () => {
   return (
     <div className={`${styles['container']}`}>
-      <HistoryPageProvider>
-        <nav>
-          <Link to={`/`}>Home</Link>
-        </nav>
-        <main>
-          <Outlet />
-        </main>
-        <footer>
-          <HistoryPage />
-        </footer>
-      </HistoryPageProvider>
+      <SignInTokenProvider>
+        <HistoryPageProvider>
+          <LeftNavigator />
+          <main>
+            <Outlet />
+          </main>
+          <footer>
+            <HistoryPage />
+          </footer>
+        </HistoryPageProvider>
+      </SignInTokenProvider>
     </div>
   );
 };

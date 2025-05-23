@@ -49,7 +49,7 @@ class SecurityConfig : WebFluxConfigurer {
             .pathMatchers("/api/v1/public/**").permitAll()
             .pathMatchers("/api/v1/private/user/**").hasAuthority("USER")
             .pathMatchers("/api/v1/private/admin/**").hasAuthority("ADMIN")
-            .pathMatchers("/api/v1/private/master/**").hasAuthority("ADMIN")
+            .pathMatchers("/api/v1/private/master/**").hasAuthority("MASTER")
             .anyExchange().permitAll()
     }
 

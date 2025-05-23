@@ -6,8 +6,8 @@ import com.ardi.afarensis.dto.request.RequestUser
 import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseUser
 import com.ardi.afarensis.provider.TokenProvider
-import com.ardi.afarensis.repository.UserRefreshTokenRepository
 import com.ardi.afarensis.repository.UserRepository
+import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import org.springframework.data.domain.Sort
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService
@@ -25,7 +25,6 @@ class UserService(
     private val userRepository: UserRepository,
     private val bCryptPasswordEncoder: BCryptPasswordEncoder,
     private val tokenProvider: TokenProvider,
-    private val userRefreshTokenRepository: UserRefreshTokenRepository
 ) : ReactiveUserDetailsService {
 
     override fun findByUsername(username: String?): Mono<UserDetails> {
@@ -79,39 +78,42 @@ class UserService(
 
         val userDto = user.toDto();
 
-        val accessToken = tokenProvider.generateToken(userDto.userId, false);
-        val refreshToken = tokenProvider.generateToken(userDto.userId, true);
+        val accessToken = async {
+            tokenProvider.generateToken(userDto.userId, false)
+        };
+        val refreshToken = async {
+            tokenProvider.generateToken(userDto.userId, true)
+        };
+        
 
-        user.addRefreshToken(refreshToken, Instant.now().plus(tokenProvider.REFRESH_EXP, ChronoUnit.SECONDS))
+        user.addRefreshToken(refreshToken.await(), Instant.now().plus(tokenProvider.REFRESH_EXP, ChronoUnit.SECONDS))
 
         userRepository.save(user)
 
         ResponseUser.SignIn(
-            accessToken,
+            accessToken.await(),
             tokenProvider.ACCESS_EXP,
-            refreshToken,
+            refreshToken.await(),
             tokenProvider.REFRESH_EXP,
-            userDto.userId
+            userDto.userId,
+            userDto.roles.toSet(),
         )
     }
 
     @Transactional
     suspend fun publishAccessToken(req: RequestUser.RefreshToken) = supervisorScope {
-
         val user = userRepository.findByUserId(req.userId)
             ?: throw RuntimeException("User not found")
 
-        if (user.userRefreshToken == null) {
-            throw RuntimeException("Refresh token not found")
-        }
+        user.userRefreshToken?.let { refreshToken ->
+            if (refreshToken.refreshToken != req.refreshToken) {
+                throw RuntimeException("Refresh token not matched")
+            }
 
-        if (user.userRefreshToken!!.refreshToken != req.refreshToken) {
-            throw RuntimeException("Refresh token not matched")
-        }
-
-        if (user.userRefreshToken!!.expiredAt.isBefore(Instant.now())) {
-            throw RuntimeException("Refresh token expired")
-        }
+            if (refreshToken.expiredAt.isBefore(Instant.now())) {
+                throw RuntimeException("Refresh token expired")
+            }
+        } ?: throw RuntimeException("Refresh token not found")
 
         val accessToken = tokenProvider.generateToken(user.userId, false)
 
@@ -120,7 +122,8 @@ class UserService(
             tokenProvider.ACCESS_EXP,
             "",
             0L,
-            user.userId
+            user.userId,
+            setOf()
         )
     }
 

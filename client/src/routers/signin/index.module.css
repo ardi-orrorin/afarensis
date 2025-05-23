@@ -1,0 +1,111 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+.login-container {
+    padding: 1rem;
+    height: 400px;
+    border: 1px solid #ccc;
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 650px;
+    gap: 50px;
+}
+
+.headline {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #333;
+    text-align: center;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.login-input {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+}
+
+
+.login-input > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-input > div > input {
+    width: 300px;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    outline: none;
+}
+
+.login-input > button {
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 100%;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s ease;
+}
+
+.login-input > button:hover {
+    background-color: #0056b3;
+}
+
+.login-container > div:last-child {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+}
+
+.login-container > div:last-child > button {
+    width: 100px;
+    height: 30px;
+    border: none;
+    border-radius: 10px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s ease;
+}
+
+
+.login-container > div:last-child > button:hover {
+    background-color: #0056b3;
+}
+
+.login-container > div:last-child > a {
+    text-decoration: none;
+    color: #007bff;
+}
+
+.container > * * > button:disabled {
+    background-color: #333333;
+}
+
+.container > * * > input:disabled {
+    background-color: rgba(0, 0, 0, 0.1);
+}

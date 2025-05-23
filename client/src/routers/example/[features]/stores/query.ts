@@ -11,7 +11,7 @@ const getExample = (fetchArgs: Args) => {
 
   const queryKey = ['example'];
 
-  return reactQuery.basehFetchQueryFn<Data, Args>({
+  return reactQuery.baseFetchQueryFn<Data, Args>({
     queryKey,
     fetchApi: exampleServiceApi.getExample,
     fetchArgs,

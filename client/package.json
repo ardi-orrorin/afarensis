@@ -5,6 +5,7 @@
   "proxy": "http://localhost:8080",
   "homepage": ".",
   "dependencies": {
+    "@hookform/resolvers": "^5.0.1",
     "@tanstack/react-query": "^5.76.1",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -17,10 +18,13 @@
     "axios": "^1.9.0",
     "dayjs": "^1.11.13",
     "react": "^19.1.0",
+    "react-cookie": "^8.0.1",
     "react-dom": "^19.1.0",
+    "react-hook-form": "^7.56.4",
     "react-router-dom": "^7.6.0",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "react-scripts": "^5.0.1",
+    "web-vitals": "^2.1.4",
+    "zod": "^3.25.20"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -42,10 +46,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^8.32.1",
-    "@types/node": "^22.15.18",
-    "@types/react": "^19.1.4",
+    "@types/node": "^22.15.21",
+    "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
-    "eslint": "^8.32.1",
+    "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.1.5",
     "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-prettier": "^5.4.0",

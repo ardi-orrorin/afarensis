@@ -4,13 +4,13 @@ import Layout from './layout';
 import Index from '.';
 import authMiddleware from '../../commons/services/middleware';
 
+
 const ExampleRouter: RouteObject = {
   id: 'root/exmaple',
   path: '/example',
   Component: Layout,
-  loader: async () => {
-    await authMiddleware();
-  },
+  unstable_middleware: [authMiddleware],
+  shouldRevalidate: () => false,
   children: [
     {
       index: true,
