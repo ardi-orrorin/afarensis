@@ -4,10 +4,10 @@ export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 export type ContentType = 'application/json' | 'multipart/form-data' | '' | string;
 export type Headers = Record<string, string | boolean>;
 
-export type ExAxoisProps = {
+export type ExAxiosProps<I> = {
   url: string;
   method: Method;
-  body?: any;
+  body?: I;
   params?: any;
   setAuthorization?: boolean;
   contentType?: ContentType;
@@ -18,11 +18,11 @@ export type ExAxoisProps = {
   timeout?: number;
 };
 
-async function exAxios<R = any, I = any>(props: ExAxoisProps & { isReturnData: true }): Promise<R>;
-async function exAxios<R = any, I = any>(props: ExAxoisProps & { isReturnData: false }): Promise<AxiosResponse<R>>;
-async function exAxios<R = any, I = any>(props: ExAxoisProps): Promise<AxiosResponse<R>>;
+async function exAxios<R = any, I = any>(props: ExAxiosProps<I> & { isReturnData: true }): Promise<R>;
+async function exAxios<R = any, I = any>(props: ExAxiosProps<I> & { isReturnData: false }): Promise<AxiosResponse<R>>;
+async function exAxios<R = any, I = any>(props: ExAxiosProps<I>): Promise<AxiosResponse<R>>;
 
-async function exAxios<R = any, I = any>(props: ExAxoisProps): Promise<R | AxiosResponse<R>> {
+async function exAxios<R = any, I = any>(props: ExAxiosProps<I>): Promise<R | AxiosResponse<R>> {
   const { url, method, body, params, contentType, isReturnData, timeout, headers, cache } =
     props;
 

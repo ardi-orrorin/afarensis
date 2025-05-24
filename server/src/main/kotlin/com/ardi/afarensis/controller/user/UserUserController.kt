@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/v1/user/user")
+@RequestMapping("/api/v1/private/user/user")
 class UserUserController(
     private val userService: UserService,
 ) {

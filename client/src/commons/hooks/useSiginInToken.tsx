@@ -28,7 +28,7 @@ export const SignInTokenProvider = ({ children }: { children: React.ReactNode })
       ...old, ...token,
     }));
   };
-
+  
   const getRoles = () => {
     return token?.roles ?? [];
   };

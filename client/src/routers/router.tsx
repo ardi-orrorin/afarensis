@@ -6,12 +6,16 @@ import ExampleRouter from './example/router';
 import SignupRouter from './signup/router';
 import SignInRouter from './signin/router';
 import SignOutRouter from './signout/router';
+import MasterRouter from './master/router';
 
 const router = createBrowserRouter([
   {
     path: '/',
     Component: RootLayout,
     errorElement: <ErrorComponent />,
+    loader: async () => {
+      
+    },
     children: [
       {
         index: true,
@@ -21,6 +25,7 @@ const router = createBrowserRouter([
       SignupRouter,
       SignInRouter,
       SignOutRouter,
+      MasterRouter,
     ],
   },
 ]);

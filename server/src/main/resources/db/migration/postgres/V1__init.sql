@@ -5,9 +5,10 @@ CREATE TABLE users
     pwd         VARCHAR(255)        NOT NULL,
     email       VARCHAR(255) UNIQUE NOT NULL,
     profile_img VARCHAR(500) DEFAULT '',
-    created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+    created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    deleted_at  TIMESTAMP,
+    is_deleted  BOOLEAN      DEFAULT FALSE
 );
-
 
 CREATE TABLE users_details
 (
@@ -91,7 +92,7 @@ VALUES ('INIT', '{
 }', '{
   "initialized": false,
   "isUpdatedMasterPwd": false
-}', FALSE);
+}', TRUE);
 
 INSERT INTO system_settings (key, value, init_value, public)
 VALUES ('SMTP', '{
@@ -107,9 +108,41 @@ VALUES ('SMTP', '{
   "username": "",
   "password": ""
 }', FALSE);
+
 INSERT INTO system_settings (key, value, init_value, public)
 VALUES ('SIGN_UP', '{
   "enabled": false
 }', '{
   "enabled": false
 }', TRUE);
+
+INSERT INTO system_settings (key, value, init_value, public)
+VALUES ('WEBHOOK', '{
+  "enabled": false,
+  "hasRole": [
+    "USER",
+    "ADMIN",
+    "MASTER"
+  ],
+  "coverage": [
+    "SIGNIN",
+    "SIGNOUT",
+    "SIGNUP",
+    "PASSWORD",
+    "ROLE"
+  ]
+}', '{
+  "enabled": false,
+  "hasRole": [
+    "USER",
+    "ADMIN",
+    "MASTER"
+  ],
+  "coverage": [
+    "SIGNIN",
+    "SIGNOUT",
+    "SIGNUP",
+    "PASSWORD",
+    "ROLE"
+  ]
+}', FALSE);
