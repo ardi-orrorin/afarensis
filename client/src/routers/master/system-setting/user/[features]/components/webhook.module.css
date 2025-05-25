@@ -1,0 +1,23 @@
+.role-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.role-container > select {
+    width: 100px;
+    height: 30px;
+    border-radius: 5px;
+    border: none;
+    background-color: #ccc;
+}
+
+.role-container > button {
+    width: 100px;
+    height: 30px;
+    border-radius: 5px;
+    border: none;
+    background-color: #ccc;
+    cursor: pointer;
+}
+

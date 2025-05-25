@@ -54,7 +54,7 @@ async function exAxios<R = any, I = any>(props: ExAxiosProps<I>): Promise<R | Ax
 
   if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
     if (!body) Error('path body is required');
-    config.data = body;
+    config.data = body!;
   }
   if (method === 'GET' || method === 'DELETE') {
     config.params = params;

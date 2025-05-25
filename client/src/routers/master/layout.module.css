@@ -1,0 +1,18 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: start;
+    height: inherit;
+    gap: 0.8rem;
+}
+
+.container > * *:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}

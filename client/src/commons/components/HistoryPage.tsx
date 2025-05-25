@@ -6,7 +6,7 @@ import { useHistoryPage } from '../hooks/usehisotryPage';
 const HistoryPage = () => {
   const navigate = useNavigate();
 
-  const { pages, addPage, removePage } = useHistoryPage();
+  const { pages, removePage } = useHistoryPage();
   const [more, setMore] = useState(true);
 
   const onClickChangeMore = () => {

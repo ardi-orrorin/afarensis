@@ -3,16 +3,14 @@ import Layout from './layout';
 import Index from '.';
 import systemSettingQuery from './[features]/stores/query';
 import SmtpRouter from './smtp/router';
+import UserRouter from './user/router';
 
 const SystemSettingRouter: RouteObject = {
   id: 'root/master/system-setting',
   path: 'system-setting',
   Component: Layout,
   loader: async () => {
-    await Promise.allSettled([
-      systemSettingQuery.publicQuery().prefetch(),
-      systemSettingQuery.privateQuery().prefetch(),
-    ]);
+    await systemSettingQuery.privateQuery().prefetch();
   },
   children: [
     {
@@ -20,6 +18,7 @@ const SystemSettingRouter: RouteObject = {
       Component: Index,
     },
     SmtpRouter,
+    UserRouter,
   ],
 };
 

@@ -54,6 +54,7 @@ const Index = () => {
 
     } catch (e) {
       const err = e as AxiosError;
+      commonFunc.axiosError(err);
     } finally {
       setLoading(false);
     }

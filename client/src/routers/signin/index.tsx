@@ -20,7 +20,7 @@ const Index = () => {
   const pwdRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { setToken } = useSignInToken();
-  const [_, setCookie, __] = useCookies(['access_token', 'refresh_token', 'user_id']);
+  const [_, setCookie, __] = useCookies(['access_token', 'refresh_token', 'user_id', 'roles']);
 
 
   const isValid = useMemo(() => {
@@ -61,6 +61,12 @@ const Index = () => {
         'user_id',
         data.userId,
         signInFunc.createCookieOption({ expiresIn: data.refreshTokenExpiresIn }),
+      );
+
+      setCookie(
+        'roles',
+        data.roles,
+        signInFunc.createCookieOption({ expiresIn: data.accessTokenExpiresIn }),
       );
 
       setToken(data);
@@ -139,3 +145,4 @@ const Index = () => {
 };
 
 export default Index;
+

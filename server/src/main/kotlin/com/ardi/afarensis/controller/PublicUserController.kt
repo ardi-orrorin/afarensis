@@ -1,7 +1,9 @@
 package com.ardi.afarensis.controller
 
+import com.ardi.afarensis.dto.Role
 import com.ardi.afarensis.dto.UserDetailDto
 import com.ardi.afarensis.dto.request.RequestUser
+import com.ardi.afarensis.service.SystemSettingService
 import com.ardi.afarensis.service.UserService
 import jakarta.validation.Valid
 import kotlinx.coroutines.supervisorScope
@@ -11,7 +13,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/v1/public/users")
 class PublicUserController(
-    private val userService: UserService
+    private val userService: UserService,
+    private val systemSettingService: SystemSettingService,
 ) {
     @GetMapping("")
     suspend fun getUsers() = supervisorScope {
@@ -44,6 +47,13 @@ class PublicUserController(
         @Valid @RequestBody req: RequestUser.RefreshToken,
     ) = supervisorScope {
         userService.publishAccessToken(req)
+    }
+
+    @PatchMapping("master")
+    suspend fun updateMaster(
+        @Valid @RequestBody req: RequestUser.InitMasterUpdate
+    ) = supervisorScope {
+        userService.updateMaster(req, Role.GUEST)
     }
 
 }

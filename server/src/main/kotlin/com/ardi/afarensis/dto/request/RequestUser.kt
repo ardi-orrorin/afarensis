@@ -43,4 +43,11 @@ class RequestUser {
         val code: String?,
     ) {}
 
+    data class InitMasterUpdate(
+        @field:NotBlank(message = "비밀번호를 입력해주세요.")
+        val pwd: String,
+        @field:NotBlank(message = "이메일을 입력해주세요.")
+        @field:Email(message = "이메일 형식이 아닙니다.")
+        val email: String
+    )
 }

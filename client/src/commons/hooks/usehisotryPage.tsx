@@ -1,8 +1,6 @@
 import { createContext, useCallback, useContext, useState } from 'react';
 import { CommonType } from '../types/commonType';
 
-const MAX_SIZE = 10;
-
 type HistoryPageContextT = {
   pages: CommonType.HistoryPages;
   addPage: (page: CommonType.HistoryPage) => void;

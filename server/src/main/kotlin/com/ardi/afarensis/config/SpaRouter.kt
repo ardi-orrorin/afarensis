@@ -3,6 +3,7 @@ package com.ardi.afarensis.config
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.annotation.Order
 import org.springframework.core.io.ClassPathResource
 import org.springframework.core.io.Resource
 import org.springframework.http.MediaType
@@ -12,7 +13,8 @@ import org.springframework.web.reactive.function.server.*
 class SpaRouter {
     data class StaticResourceMapping(val urlPattern: String, val resourceLocation: String)
 
-    @Bean
+    @Bean("staticResourceRouter")
+    @Order(1)
     fun staticResourceRouter(): RouterFunction<ServerResponse> {
         val resourceMappings = listOf(
             StaticResourceMapping("/static/**", "static/static/"),
@@ -27,12 +29,21 @@ class SpaRouter {
             ?: RouterFunctions.route(neverPredicate) { ServerResponse.notFound().build() } // 리스트가 비었을 경우
     }
 
-    // 2. 루트 경로 및 HTML 요청을 index.html로 응답
-    @Bean
-    fun indexRouter(@Value("classpath:/static/index.html") html: Resource): RouterFunction<ServerResponse> {
+
+    @Bean("customSpaRouter")
+    @Order(2)
+    fun spaRouter(): RouterFunction<ServerResponse> {
         return RouterFunctions.route(
-            RequestPredicates.GET("/").and(RequestPredicates.accept(MediaType.TEXT_HTML)),
-            { _ -> ServerResponse.ok().contentType(MediaType.TEXT_HTML).bodyValue(html) }
+            RequestPredicates.GET("/**")
+                .and(RequestPredicates.accept(MediaType.TEXT_HTML))
+                .and(RequestPredicates.path("/api/**").negate())
+                .and(RequestPredicates.path("/static/**").negate()),
+            { _ ->
+                val indexHtml = ClassPathResource("static/index.html")
+                ServerResponse.ok()
+                    .contentType(MediaType.TEXT_HTML)
+                    .bodyValue(indexHtml)
+            }
         )
     }
 

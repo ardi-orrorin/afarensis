@@ -39,6 +39,7 @@ type FormErrorsT<T> = {
   [key: string]: string [] | undefined;
 }
 
+
 export namespace CommonType {
   export type CreateQueryActions<T> = CreateQueryActionsT<T>;
   export type GetQuery<T> = GetQueryT<T>;
@@ -65,6 +66,4 @@ export namespace CommonType {
     GUEST = 'GUEST',
     MASTER = 'MASTER'
   }
-
-
 }

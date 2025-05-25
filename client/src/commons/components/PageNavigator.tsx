@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import styles from './pageNavigator.module.css';
+
 
 const PageNavigator = ({ page, size, total }: { page: number; size: number; total: number }) => {
   const lastPage = useMemo(() => Math.ceil(total / size), [total, size]);

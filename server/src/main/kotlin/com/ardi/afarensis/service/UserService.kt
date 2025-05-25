@@ -2,14 +2,19 @@ package com.ardi.afarensis.service
 
 import com.ardi.afarensis.dto.ResStatus
 import com.ardi.afarensis.dto.Role
+import com.ardi.afarensis.dto.SystemSettingDto
+import com.ardi.afarensis.dto.SystemSettingKey
 import com.ardi.afarensis.dto.request.RequestUser
 import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseUser
 import com.ardi.afarensis.provider.TokenProvider
+import com.ardi.afarensis.repository.SystemSettingRepository
 import com.ardi.afarensis.repository.UserRepository
 import com.ardi.afarensis.util.StringUtil
 import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
+import org.springframework.cloud.context.scope.refresh.RefreshScope
 import org.springframework.data.domain.Sort
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService
 import org.springframework.security.core.userdetails.UserDetails
@@ -27,6 +32,9 @@ class UserService(
     private val bCryptPasswordEncoder: BCryptPasswordEncoder,
     private val tokenProvider: TokenProvider,
     private val stringUtil: StringUtil,
+    private val systemSettings: Map<SystemSettingKey, SystemSettingDto>,
+    private val systemSettingRepository: SystemSettingRepository,
+    private val refreshScope: RefreshScope,
 ) : ReactiveUserDetailsService {
 
     override fun findByUsername(username: String?): Mono<UserDetails> {
@@ -125,7 +133,7 @@ class UserService(
             "",
             0L,
             user.userId,
-            setOf()
+            user.userRoles.map { it.role }.toSet(),
         )
     }
 
@@ -182,6 +190,45 @@ class UserService(
         ResponseStatus(
             ResStatus.SUCCESS,
             "Password reset success",
+            true,
+        )
+    }
+
+    @Transactional
+    fun updateMaster(req: RequestUser.InitMasterUpdate, role: Role) = runBlocking {
+        val sysInit = systemSettings[SystemSettingKey.INIT]
+        val sysInitValue = sysInit?.value ?: throw RuntimeException("System not Init value")
+        val initialized = sysInitValue["initialized"] as Boolean
+        val isUpdatedMasterPwd = sysInitValue["isUpdatedMasterPwd"] as Boolean
+        if ((role == Role.GUEST || role == Role.USER || role == Role.ADMIN) && (initialized || isUpdatedMasterPwd)) {
+            return@runBlocking ResponseStatus(
+                ResStatus.FAILED,
+                "Master password already updated",
+                false,
+            )
+        }
+
+
+        val master = userRepository.findByUserId("master")
+            ?: throw RuntimeException("User not found")
+        master.pwd = bCryptPasswordEncoder.encode(req.pwd)
+        master.email = req.email
+
+
+        val init = systemSettingRepository.findByKey(SystemSettingKey.INIT)
+            ?: throw RuntimeException("System not Init")
+        init.value = mapOf(
+            "initialized" to true,
+            "isUpdatedMasterPwd" to true,
+        )
+
+        systemSettingRepository.save(init)
+
+        refreshScope.refresh("systemSetting")
+
+        ResponseStatus(
+            ResStatus.SUCCESS,
+            "Master password updated",
             true,
         )
     }

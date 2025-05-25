@@ -16,10 +16,11 @@ function isAxiosResponse<T>(obj: any): obj is AxiosResponse<T> {
 
 const queryClient = new QueryClient();
 
-const createQueryActions = <T = any>({
-                                       queryKey,
-                                       queryOp,
-                                     }: {
+const createQueryActions = <T = any>
+({
+   queryKey,
+   queryOp,
+ }: {
   queryKey: string[];
   queryOp: Omit<UseQueryOptions<T, Error, T, string[]>, 'queryFn'>;
 }): CommonType.CreateQueryActions<T> => {
@@ -103,7 +104,7 @@ const baseFetchQueryFn =
       queryKey,
       initialData,
     });
-    
+
     const actions = reactQuery.createQueryActions<R>({ queryKey, queryOp });
 
     return { queryKey, ...actions } as CommonType.GetQuery<R>;

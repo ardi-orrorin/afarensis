@@ -21,7 +21,7 @@ const BasicErrorComponent = ({ err }: { err: Error }) => {
       navigate('/');
     }
 
-    const interval = setInterval((log) => {
+    const interval = setInterval(() => {
       setCount(prev => prev - 1);
     }, 1000);
 

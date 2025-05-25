@@ -33,6 +33,7 @@ class SystemSettingService(
             else -> update(req.key, req.value)
         }
     }
+    
 
     suspend fun updateSmtp(value: Map<String, Any>) = supervisorScope {
         val result = update(SystemSettingKey.SMTP, value)

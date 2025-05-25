@@ -85,6 +85,15 @@ ALTER TABLE system_settings
 
 
 -- INSERT DEFAULT DATA
+INSERT INTO users (id, user_id, pwd, email, profile_img, created_at, deleted_at, is_deleted)
+VALUES (0, 'master', '', '', '', NOW(), NULL, FALSE);
+
+INSERT INTO users_roles (users_pk, role)
+VALUES (0, 'MASTER'),
+       (0, 'ADMIN'),
+       (0, 'USER');
+
+
 INSERT INTO system_settings (key, value, init_value, public)
 VALUES ('INIT', '{
   "initialized": false,

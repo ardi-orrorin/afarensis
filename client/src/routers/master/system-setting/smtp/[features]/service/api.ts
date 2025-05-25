@@ -11,17 +11,9 @@ const postTest = async (body: SystemSetting.Smtp) => {
   });
 };
 
-const post = async (body: SystemSetting.PrivateSystemSetting[SystemSetting.Key.SMTP]) => {
-  return exAxios<CommonType.ResponseStatus<boolean>, SystemSetting.PrivateSystemSetting[SystemSetting.Key.SMTP]>({
-    method: 'PUT',
-    url: '/api/v1/private/master/system-setting',
-    body,
-    isReturnData: true,
-  });
-};
 
 const smtpServiceApi = {
-  postTest, post,
+  postTest,
 };
 
 export default smtpServiceApi;

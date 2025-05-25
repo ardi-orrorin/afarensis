@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { SystemSetting } from './systemSetting';
+import { CommonType } from '../../../../../commons/types/commonType';
 
 const Smtp = z.object({
   host: z.string().regex(
@@ -28,8 +29,8 @@ const Init = z.object({
 
 const Webhook = z.object({
   enabled: z.boolean(),
-  hasRole: z.enum(Object.values(SystemSetting.Key) as [string, ...string[]]),
-  coverage: z.enum(Object.values(SystemSetting.Coverage) as [string, ...string[]]),
+  hasRole: z.array(z.nativeEnum(CommonType.Role)),
+  coverage: z.array(z.nativeEnum(SystemSetting.Coverage)),
 });
 
 const systemSettingSchema = {

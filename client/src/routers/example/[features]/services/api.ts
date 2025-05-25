@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const getExample = async ({ params }: { params: { id: number; sort: string } }) => {
+const getExample = async () => {
   return axios.get('/mocks/example.json');
 };
 

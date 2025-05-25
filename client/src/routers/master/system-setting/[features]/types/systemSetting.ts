@@ -3,20 +3,20 @@ import systemSettingSchema from './systemSettingSchema';
 
 
 interface PublicSystemSettingI {
-  [SystemSetting.Key.INIT]: SystemSettingValueI<SystemSetting.Key.INIT>;
-  [SystemSetting.Key.SIGN_UP]: SystemSettingValueI<SystemSetting.Key.SIGN_UP>;
+  [SystemSetting.PublicKey.SIGN_UP]: SystemSettingValueI<SystemSetting.PublicKey.SIGN_UP>;
+  [SystemSetting.PublicKey.INIT]: SystemSettingValueI<SystemSetting.PublicKey.INIT>;
 
-  [key: string]: SystemSettingValueI<SystemSetting.Key>;
+  [key: string]: SystemSettingValueI<SystemSetting.PublicKey>;
 }
 
 interface PrivateSystemSettingI {
-  [SystemSetting.Key.SMTP]: SystemSettingValueI<SystemSetting.Key.SMTP>;
-  [SystemSetting.Key.WEBHOOK]: SystemSettingValueI<SystemSetting.Key.WEBHOOK>;
+  [SystemSetting.PrivateKey.SMTP]: SystemSettingValueI<SystemSetting.PrivateKey.SMTP>;
+  [SystemSetting.PrivateKey.WEBHOOK]: SystemSettingValueI<SystemSetting.PrivateKey.WEBHOOK>;
 
-  [key: string]: SystemSettingValueI<SystemSetting.Key>;
+  [key: string]: SystemSettingValueI<SystemSetting.PrivateKey>;
 }
 
-interface SystemSettingValueI<T extends SystemSetting.Key> {
+interface SystemSettingValueI<T extends SystemSetting.PrivateKey | SystemSetting.PublicKey> {
   key: T;
   value: ValueI[T];
   initValue: ValueI[T];
@@ -24,18 +24,36 @@ interface SystemSettingValueI<T extends SystemSetting.Key> {
 }
 
 interface ValueI {
-  [SystemSetting.Key.INIT]: SystemSetting.Init;
-  [SystemSetting.Key.SIGN_UP]: SystemSetting.SignUp;
-  [SystemSetting.Key.SMTP]: SystemSetting.Smtp;
-  [SystemSetting.Key.WEBHOOK]: SystemSetting.Webhook;
+  [SystemSetting.PublicKey.SIGN_UP]: SystemSetting.SignUp;
+  [SystemSetting.PublicKey.INIT]: SystemSetting.Init;
 
-  [key: string]: InitT | SignUpT | SmtpT;
+  [SystemSetting.PrivateKey.SMTP]: SystemSetting.Smtp;
+  [SystemSetting.PrivateKey.WEBHOOK]: SystemSetting.Webhook;
+
+  [key: string]: InitT | SignUpT | SmtpT | WebhookT;
 }
 
 type InitT = z.infer<typeof systemSettingSchema.Init>;
 type SignUpT = z.infer<typeof systemSettingSchema.SignUp>;
 type SmtpT = z.infer<typeof systemSettingSchema.Smtp>;
 type WebhookT = z.infer<typeof systemSettingSchema.Webhook>;
+
+
+type SettingTemplateBtnT = {
+  text: string,
+  disabled: boolean,
+  onClick: () => void
+}
+
+type SettingTemplateInputT = {
+  className?: string,
+  name: string,
+  type: React.HTMLInputTypeAttribute | undefined,
+  value: string,
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+  disabled: boolean
+  placeholder?: string
+}
 
 export namespace SystemSetting {
   export type Init = InitT;
@@ -44,13 +62,18 @@ export namespace SystemSetting {
   export type Webhook = WebhookT;
   export type PublicSystemSetting = PublicSystemSettingI;
   export type PrivateSystemSetting = PrivateSystemSettingI;
-  export type SystemSettingValue<T extends SystemSetting.Key> = SystemSettingValueI<T>
+  export type SystemSettingValue<T extends SystemSetting.PublicKey | SystemSetting.PrivateKey> = SystemSettingValueI<T>
   export type Value = ValueI;
+  export type SettingTemplateBtn = SettingTemplateBtnT;
+  export type SettingTemplateInput = SettingTemplateInputT;
 
-  export enum Key {
-    INIT = 'INIT',
-    SMTP = 'SMTP',
+  export enum PublicKey {
     SIGN_UP = 'SIGN_UP',
+    INIT = 'INIT',
+  }
+
+  export enum PrivateKey {
+    SMTP = 'SMTP',
     WEBHOOK = 'WEBHOOK',
   }
 
