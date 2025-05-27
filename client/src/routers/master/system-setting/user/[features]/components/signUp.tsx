@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { CommonType } from '../../../../../../commons/types/commonType';
 import { SystemSetting } from '../../../[features]/types/systemSetting';
 import systemSettingServiceApi from '../../../[features]/service/api';
-import { AxiosError } from 'axios';
+import { AxiosError, AxiosResponse } from 'axios';
 import Toggle from '../../../[features]/components/toggle';
 import systemSettingFunc from '../../../[features]/service/func';
 import commonFunc from '../../../../../../commons/services/funcs';
@@ -57,8 +57,16 @@ const SignUp = () => {
       setLoading(true);
       const res = await systemSettingServiceApi.post<SystemSetting.PublicSystemSetting[PublicKey.SIGN_UP]>(newObj);
       setResponse(res);
+      await refetch();
     } catch (e) {
       const err = e as AxiosError;
+      const res = err?.response as AxiosResponse;
+
+      setErrors({
+        enabled: res.data.message,
+      });
+
+      setValue(oldObj.value);
       commonFunc.axiosError(err);
     } finally {
       setLoading(false);

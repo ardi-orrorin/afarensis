@@ -19,6 +19,8 @@ java {
     }
 }
 
+
+
 configurations {
     compileOnly {
         extendsFrom(configurations.annotationProcessor.get())
@@ -109,17 +111,6 @@ val copyClientBuildToStaticResources by tasks.registering(Copy::class) {
     from(project(":client").file("build"))
     into(file(staticResourceDir))
 }
-
-gradle.taskGraph.whenReady {
-    val hasTestTasks = allTasks.any { it.name.contains("test", ignoreCase = true) }
-
-    if (hasTestTasks) {
-        copyClientBuildToStaticResources.get().enabled = false
-        deletePreviousClientBuild.get().enabled = false
-        println("Skipping client build")
-    }
-}
-
 
 tasks.named("processResources") {
     dependsOn(copyClientBuildToStaticResources)

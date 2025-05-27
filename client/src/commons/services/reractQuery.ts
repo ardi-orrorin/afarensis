@@ -16,11 +16,10 @@ function isAxiosResponse<T>(obj: any): obj is AxiosResponse<T> {
 
 const queryClient = new QueryClient();
 
-const createQueryActions = <T = any>
-({
-   queryKey,
-   queryOp,
- }: {
+const createQueryActions = <T = any>({
+  queryKey,
+  queryOp,
+}: {
   queryKey: string[];
   queryOp: Omit<UseQueryOptions<T, Error, T, string[]>, 'queryFn'>;
 }): CommonType.CreateQueryActions<T> => {
@@ -41,74 +40,72 @@ const createQueryActions = <T = any>
   return { prefetch, data, refetch, state, isPending, isFailed, isSuccess };
 };
 
-const baseFetchQueryFn =
-  <R = any, A = any, D = any>(
-    {
-      queryKey,
-      fetchApi,
-      initialData,
-      addQueryKey,
-      fetchArgs,
-    }: {
-      queryKey: string[];
-      fetchApi: (args: A) => Promise<AxiosResponse<R, D>> | Promise<R>;
-      fetchArgs?: A;
-      addQueryKey?: string[];
-      initialData: R;
-    }) => {
-    const queryFn = async () => {
-      const res = await fetchApi(fetchArgs ?? ({} as A));
+const baseFetchQueryFn = <R = any, A = any, D = any>({
+  queryKey,
+  fetchApi,
+  initialData,
+  addQueryKey,
+  fetchArgs,
+}: {
+  queryKey: string[];
+  fetchApi: (args: A) => Promise<AxiosResponse<R, D>> | Promise<R>;
+  fetchArgs?: A;
+  addQueryKey?: string[];
+  initialData: R;
+}) => {
+  const queryFn = async () => {
+    const res = await fetchApi(fetchArgs ?? ({} as A));
 
-      if (isAxiosResponse(res)) {
-        return res.data as R;
-      } else {
-        return res as R;
-      }
-    };
+    if (isAxiosResponse(res)) {
+      return res.data as R;
+    } else {
+      return res as R;
+    }
+  };
 
-    const ojbToStr = (obj: any): string => {
-      if (typeof obj === 'string' || typeof obj === 'number') {
-        return String(obj);
-      }
-
-      if (Array.isArray(obj)) {
-        if (obj.length === 0) {
-          return ``;
-        }
-        return obj.map((item) => ojbToStr(item)).join(',');
-      }
-
-      if (typeof obj === 'object') {
-        return Object.entries(obj)
-          .map(([key, value]) => {
-            if (typeof value === 'object') {
-              return `{${key}:${ojbToStr(value)}}`;
-            }
-
-            return `${key}:${value}`;
-          })
-          .reduce((acc, cur) => (cur === '' ? acc : `${acc},${cur}`));
-      }
-
-      return '';
-    };
-
-    if (addQueryKey && addQueryKey.length > 0) {
-      queryKey.push(...addQueryKey);
-    } else if (fetchArgs) {
-      queryKey.push(`args:${ojbToStr(fetchArgs)}`);
+  const ojbToStr = (obj: any): string => {
+    if (typeof obj === 'string' || typeof obj === 'number') {
+      return String(obj);
     }
 
-    const queryOp = queryOptions({
-      queryFn,
-      queryKey,
-      initialData,
-    });
+    if (Array.isArray(obj)) {
+      if (obj.length === 0) {
+        return ``;
+      }
+      return obj.map((item) => ojbToStr(item)).join(',');
+    }
 
-    const actions = reactQuery.createQueryActions<R>({ queryKey, queryOp });
+    if (typeof obj === 'object') {
+      return Object.entries(obj)
+        .map(([key, value]) => {
+          if (typeof value === 'object') {
+            return `{${key}:${ojbToStr(value)}}`;
+          }
 
-    return { queryKey, ...actions } as CommonType.GetQuery<R>;
+          return `${key}:${value}`;
+        })
+        .reduce((acc, cur) => (cur === '' ? acc : `${acc},${cur}`));
+    }
+
+    return '';
   };
+
+  if (addQueryKey && addQueryKey.length > 0) {
+    queryKey.push(...addQueryKey);
+  } else if (fetchArgs) {
+    queryKey.push(`args:${ojbToStr(fetchArgs)}`);
+  }
+
+  const queryOp = queryOptions({
+    queryFn,
+    queryKey,
+    initialData,
+  });
+
+  const actions = reactQuery.createQueryActions<R>({ queryKey, queryOp });
+
+  return { queryKey, ...actions } as CommonType.GetQuery<R>;
+};
 
 const reactQuery = {
   queryClient,

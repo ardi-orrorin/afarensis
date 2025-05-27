@@ -4,7 +4,7 @@ import Index from '.';
 
 const SignupRouter: RouteObject = {
   id: 'root/signup',
-  path: '/signup',
+  path: 'signup',
   Component: Layout,
   loader: async () => {
   },

@@ -5,6 +5,8 @@ import styles from './ErrorComponent.module.css';
 const ErrorComponent = () => {
   const err = useRouteError();
 
+  console.log(err);
+
   if (err instanceof Error) {
     return <BasicErrorComponent {...{ err }} />;
   }
@@ -22,7 +24,7 @@ const BasicErrorComponent = ({ err }: { err: Error }) => {
     }
 
     const interval = setInterval(() => {
-      setCount(prev => prev - 1);
+      setCount((prev) => prev - 1);
     }, 1000);
 
     return () => {
@@ -30,12 +32,13 @@ const BasicErrorComponent = ({ err }: { err: Error }) => {
     };
   }, [count]);
 
-
-  return <div className={styles['basic-error-container']}>
-    <div>{err.message}</div>
-    <div>Redirecting to home page...</div>
-    <div>{count}초</div>
-  </div>;
+  return (
+    <div className={styles['basic-error-container']}>
+      <div>{err.message}</div>
+      <div>Redirecting to home page...</div>
+      <div>{count}초</div>
+    </div>
+  );
 };
 
 export default ErrorComponent;

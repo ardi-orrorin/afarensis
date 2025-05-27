@@ -54,6 +54,14 @@ CREATE TABLE system_settings
     public     BOOLEAN DEFAULT FALSE
 );
 
+CREATE TABLE system_logs
+(
+    id         BIGSERIAL PRIMARY KEY,
+    message    VARCHAR(500),
+    is_read    BOOLEAN   DEFAULT FALSE,
+    level      VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 -- CREATE FOREIGN KEY
 ALTER TABLE users_details

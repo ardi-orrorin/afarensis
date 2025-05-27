@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { RouteObject } from 'react-router-dom';
 import Root from '.';
 import RootLayout from './layout';
 import ErrorComponent from '../commons/components/errorComponent';
@@ -7,14 +7,16 @@ import SignupRouter from './signup/router';
 import SignInRouter from './signin/router';
 import SignOutRouter from './signout/router';
 import MasterRouter from './master/router';
+import systemSettingQuery from './master/system-setting/[features]/stores/query';
+import commonFunc from '../commons/services/funcs';
 
-const router = createBrowserRouter([
+const rootRouter: RouteObject =
   {
     path: '/',
     Component: RootLayout,
     errorElement: <ErrorComponent />,
     loader: async () => {
-      
+      await systemSettingQuery.publicQuery().prefetch();
     },
     children: [
       {
@@ -27,7 +29,9 @@ const router = createBrowserRouter([
       SignOutRouter,
       MasterRouter,
     ],
-  },
-]);
+  };
 
-export default router;
+console.log(commonFunc.getAllRoutePaths(rootRouter));
+
+
+export default rootRouter;

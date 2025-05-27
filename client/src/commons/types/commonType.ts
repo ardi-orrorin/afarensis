@@ -39,6 +39,12 @@ type FormErrorsT<T> = {
   [key: string]: string [] | undefined;
 }
 
+interface RoutePathObjectI {
+  path: string;
+  name: string;
+  children?: RoutePathObjectI[];
+}
+
 
 export namespace CommonType {
   export type CreateQueryActions<T> = CreateQueryActionsT<T>;
@@ -48,6 +54,7 @@ export namespace CommonType {
   export type ResponseStatus<T> = ResponseStatusT<T>;
   export type PublishRefreshToken = PublishRefreshTokenT;
   export type FormErrors<T> = FormErrorsT<T>;
+  export type RoutePathObject = RoutePathObjectI;
 
   export enum ResStatus {
     SUCCESS = 'SUCCESS',

@@ -19,14 +19,14 @@ class MasterSystemSettingController(
 
     @PutMapping("")
     suspend fun update(@Valid @RequestBody req: RequestSystemSetting.General) = supervisorScope {
-        systemSettingService.updateSwitch(req)
+        systemSettingService.updateRouter(req)
     }
 
     @PutMapping("init")
     suspend fun init(@RequestBody req: RequestSystemSetting.Init) = supervisorScope {
-        systemSettingService.init(req)
+        systemSettingService.initRouter(req)
     }
-    
+
 
     @PostMapping("/smtp/test")
     suspend fun testSmtp(@Valid @RequestBody req: RequestSystemSetting.Smtp) = supervisorScope {

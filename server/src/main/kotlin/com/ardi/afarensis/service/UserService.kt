@@ -2,14 +2,12 @@ package com.ardi.afarensis.service
 
 import com.ardi.afarensis.dto.ResStatus
 import com.ardi.afarensis.dto.Role
-import com.ardi.afarensis.dto.SystemSettingDto
 import com.ardi.afarensis.dto.SystemSettingKey
 import com.ardi.afarensis.dto.request.RequestUser
 import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseUser
 import com.ardi.afarensis.provider.TokenProvider
 import com.ardi.afarensis.repository.SystemSettingRepository
-import com.ardi.afarensis.repository.UserRepository
 import com.ardi.afarensis.util.StringUtil
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -28,25 +26,23 @@ import java.time.temporal.ChronoUnit
 @Service
 @Transactional
 class UserService(
-    private val userRepository: UserRepository,
     private val bCryptPasswordEncoder: BCryptPasswordEncoder,
     private val tokenProvider: TokenProvider,
     private val stringUtil: StringUtil,
-    private val systemSettings: Map<SystemSettingKey, SystemSettingDto>,
     private val systemSettingRepository: SystemSettingRepository,
     private val refreshScope: RefreshScope,
-) : ReactiveUserDetailsService {
+) : ReactiveUserDetailsService, BasicService() {
 
     override fun findByUsername(username: String?): Mono<UserDetails> {
         val user = userRepository.findByUserId(username!!)
-            ?: return Mono.error(RuntimeException("User not found"))
+            ?: return Mono.error(IllegalArgumentException("User not found"))
 
         return Mono.just(user.toUserDetailDto())
     }
 
     suspend fun findByUserId(userId: String) = supervisorScope {
         userRepository.findByUserId(userId)?.toDto()
-            ?: throw RuntimeException("User not found")
+            ?: throw IllegalArgumentException("User not found")
     }
 
 
@@ -63,7 +59,7 @@ class UserService(
 
     suspend fun save(req: RequestUser.SignUp) = supervisorScope {
         if (userRepository.existsByUserId(req.userId)) {
-            throw RuntimeException("User already exists")
+            throw IllegalArgumentException("User already exists")
         }
 
         req.toEntity().let {
@@ -78,7 +74,7 @@ class UserService(
         val user = userRepository.findByUserId(req.userId) ?: throw RuntimeException("User not found")
 
         if (!bCryptPasswordEncoder.matches(req.pwd, user.pwd)) {
-            throw RuntimeException("Password not matched")
+            throw IllegalArgumentException("Password not matched")
         }
 
         if (user.userRefreshToken != null) {
@@ -113,17 +109,17 @@ class UserService(
     @Transactional
     suspend fun publishAccessToken(req: RequestUser.RefreshToken) = supervisorScope {
         val user = userRepository.findByUserId(req.userId)
-            ?: throw RuntimeException("User not found")
+            ?: throw IllegalArgumentException("User not found")
 
         user.userRefreshToken?.let { refreshToken ->
             if (refreshToken.refreshToken != req.refreshToken) {
-                throw RuntimeException("Refresh token not matched")
+                throw IllegalArgumentException("Refresh token not matched")
             }
 
             if (refreshToken.expiredAt.isBefore(Instant.now())) {
-                throw RuntimeException("Refresh token expired")
+                throw IllegalArgumentException("Refresh token expired")
             }
-        } ?: throw RuntimeException("Refresh token not found")
+        } ?: throw IllegalArgumentException("Refresh token not found")
 
         val accessToken = tokenProvider.generateToken(user.userId, false)
 
@@ -140,7 +136,7 @@ class UserService(
     @Transactional
     suspend fun signOut(userId: String) = supervisorScope {
         val user = userRepository.findByUserId(userId)
-            ?: throw RuntimeException("User not found")
+            ?: throw IllegalArgumentException("User not found")
 
         user.removeRefreshToken()
         userRepository.save(user)
@@ -155,10 +151,10 @@ class UserService(
     @Transactional
     suspend fun sendVerifyCode(req: RequestUser.ResetPassword) = supervisorScope {
         val user = userRepository.findByUserId(req.userId)
-            ?: throw RuntimeException("User not found")
+            ?: throw IllegalArgumentException("User not found")
 
         if (user.email != req.email) {
-            throw RuntimeException("Email not matched")
+            throw IllegalArgumentException("Email not matched")
         }
 
         val verifyCode = stringUtil.generateStr(6)
@@ -170,7 +166,7 @@ class UserService(
     @Transactional
     suspend fun resetPassword(req: RequestUser.ResetPassword) = supervisorScope {
         if (req.code.isNullOrEmpty()) {
-            throw RuntimeException("Invalid verification code")
+            throw IllegalArgumentException("Invalid verification code")
         }
 
         val user = userRepository.findByUserId(req.userId)
@@ -178,9 +174,9 @@ class UserService(
 
 
         val verifyEmail = user.userVerifyEmails.find { it.verifyKey == req.code }
-            ?: throw RuntimeException("Invalid verification code")
+            ?: throw IllegalArgumentException("Invalid verification code")
         if (verifyEmail.expiredAt.isBefore(Instant.now())) {
-            throw RuntimeException("Email verification token expired")
+            throw IllegalArgumentException("Email verification token expired")
         }
 
         val newPwd = bCryptPasswordEncoder.encode(stringUtil.generateStr(10))
@@ -196,7 +192,7 @@ class UserService(
 
     @Transactional
     fun updateMaster(req: RequestUser.InitMasterUpdate, role: Role) = runBlocking {
-        val sysInit = systemSettings[SystemSettingKey.INIT]
+        val sysInit = getCacheSystemSettingKey(SystemSettingKey.INIT)
         val sysInitValue = sysInit?.value ?: throw RuntimeException("System not Init value")
         val initialized = sysInitValue["initialized"] as Boolean
         val isUpdatedMasterPwd = sysInitValue["isUpdatedMasterPwd"] as Boolean
@@ -207,7 +203,6 @@ class UserService(
                 false,
             )
         }
-
 
         val master = userRepository.findByUserId("master")
             ?: throw RuntimeException("User not found")

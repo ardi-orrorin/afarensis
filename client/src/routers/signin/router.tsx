@@ -4,7 +4,7 @@ import Index from '.';
 
 const SignInRouter: RouteObject = {
   id: 'root/signin',
-  path: '/signin',
+  path: 'signin',
   Component: Layout,
   children: [
     {

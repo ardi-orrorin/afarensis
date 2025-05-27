@@ -42,20 +42,6 @@ const SettingItemTemplate =
             }
           </div>
         }
-        {
-          errors
-          && errorFields
-          && errorFields.length > 0
-          && <div className={styles['error-container']}>
-            {
-              errorFields.map(field => (
-                errors[field] && errors[field]!.length > 0 && (
-                  <p key={field}>{`${field}<${errors[field]}>`}</p>
-                )
-              ))
-            }
-          </div>
-        }
         <div className={styles['other-container']}>
           {otherChildren}
         </div>
@@ -72,6 +58,20 @@ const SettingItemTemplate =
             ))
           }
         </div>
+        {
+          errors
+          && errorFields
+          && errorFields.length > 0
+          && <div className={styles['error-container']}>
+            {
+              errorFields.map(field => (
+                errors[field] && errors[field]!.length > 0 && (
+                  <p key={field}>{`${field}<${errors[field]}>`}</p>
+                )
+              ))
+            }
+          </div>
+        }
         {
           response.data
           && <p className={styles['success']}>{response.message}</p>

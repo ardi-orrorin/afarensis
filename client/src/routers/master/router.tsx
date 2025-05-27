@@ -6,7 +6,7 @@ import authMiddleware from '../../commons/services/middleware';
 
 const MasterRouter: RouteObject = {
   id: 'root/master',
-  path: '/master',
+  path: 'master',
   Component: Layout,
   unstable_middleware: [authMiddleware],
   loader: async () => {

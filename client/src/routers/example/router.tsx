@@ -7,7 +7,7 @@ import authMiddleware from '../../commons/services/middleware';
 
 const ExampleRouter: RouteObject = {
   id: 'root/exmaple',
-  path: '/example',
+  path: 'example',
   Component: Layout,
   unstable_middleware: [authMiddleware],
   shouldRevalidate: () => false,
