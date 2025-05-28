@@ -8,7 +8,8 @@ import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.entity.SystemSetting
 import com.ardi.afarensis.provider.MailProvider
 import com.ardi.afarensis.repository.SystemSettingRepository
-import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -22,15 +23,15 @@ class SystemSettingService(
 
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
 
-    suspend fun findByKey(key: SystemSettingKey) = supervisorScope {
+    suspend fun findByKey(key: SystemSettingKey) = withContext(Dispatchers.IO) {
         getCacheSystemSettingKey(key)
     }
 
-    suspend fun findAllByPublic(isPublic: Boolean) = supervisorScope {
+    suspend fun findAllByPublic(isPublic: Boolean) = withContext(Dispatchers.IO) {
         getCacheSystemSetting().filter { it.value.public == isPublic }
     }
 
-    suspend fun updateRouter(req: RequestSystemSetting.General) = supervisorScope {
+    suspend fun updateRouter(req: RequestSystemSetting.General) = withContext(Dispatchers.IO) {
         when (req.key) {
             SystemSettingKey.SMTP -> updateSmtp(req.value)
             SystemSettingKey.SIGN_UP -> updateSignUp(req.value)
@@ -38,7 +39,16 @@ class SystemSettingService(
         }
     }
 
-    suspend fun updateSmtp(value: Map<String, Any>) = supervisorScope {
+    suspend fun updateInit() = withContext(Dispatchers.IO) {
+        val newValue = mapOf(
+            "initialized" to true,
+            "isUpdatedMasterPwd" to true,
+        )
+
+        update(SystemSettingKey.INIT, newValue)
+    }
+
+    suspend fun updateSmtp(value: Map<String, Any>) = withContext(Dispatchers.IO) {
         val signup = getCacheSystemSettingKey(SystemSettingKey.SIGN_UP)
             ?: throw IllegalArgumentException("System setting not found")
 
@@ -55,7 +65,7 @@ class SystemSettingService(
         result
     }
 
-    suspend fun updateSignUp(value: Map<String, Any>) = supervisorScope {
+    suspend fun updateSignUp(value: Map<String, Any>) = withContext(Dispatchers.IO) {
         val smtp = getCacheSystemSettingKey(SystemSettingKey.SMTP)
             ?: throw IllegalArgumentException("System setting not found")
 
@@ -66,7 +76,7 @@ class SystemSettingService(
         update(SystemSettingKey.SIGN_UP, value)
     }
 
-    suspend fun update(key: SystemSettingKey, value: Map<String, Any>) = supervisorScope {
+    suspend fun update(key: SystemSettingKey, value: Map<String, Any>) = withContext(Dispatchers.IO) {
         val systemSetting = systemSettingRepository.findByKey(key)
             ?: throw IllegalArgumentException("System setting not found")
 
@@ -81,7 +91,7 @@ class SystemSettingService(
         )
     }
 
-    suspend fun testSmtp(req: RequestSystemSetting.Smtp) = supervisorScope {
+    suspend fun testSmtp(req: RequestSystemSetting.Smtp) = withContext(Dispatchers.IO) {
         val result = mailProvider.testSmtp(req)
 
         ResponseStatus(
@@ -91,14 +101,14 @@ class SystemSettingService(
         )
     }
 
-    suspend fun initRouter(req: RequestSystemSetting.Init) = supervisorScope {
+    suspend fun initRouter(req: RequestSystemSetting.Init) = withContext(Dispatchers.IO) {
         when (req.key) {
             SystemSettingKey.SMTP -> smtpInit()
-            else -> throw IllegalArgumentException("Invalid system setting key")
+            else -> init(req.key)
         }
     }
 
-    suspend fun smtpInit() = supervisorScope {
+    suspend fun smtpInit() = withContext(Dispatchers.IO) {
         val signup = getCacheSystemSettingKey(SystemSettingKey.SIGN_UP)
             ?: throw IllegalArgumentException("System setting not found")
 
@@ -110,7 +120,7 @@ class SystemSettingService(
     }
 
 
-    suspend fun init(key: SystemSettingKey) = supervisorScope {
+    suspend fun init(key: SystemSettingKey) = withContext(Dispatchers.IO) {
 
         val systemSetting = systemSettingRepository.findByKey(key)
             ?: throw IllegalArgumentException("System setting not found")
@@ -125,7 +135,7 @@ class SystemSettingService(
             data = true,
         )
     }
-    
+
     private fun save(systemSetting: SystemSetting) {
         systemSettingRepository.save(systemSetting)
 

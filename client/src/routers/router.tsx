@@ -8,7 +8,6 @@ import SignInRouter from './signin/router';
 import SignOutRouter from './signout/router';
 import MasterRouter from './master/router';
 import systemSettingQuery from './master/system-setting/[features]/stores/query';
-import commonFunc from '../commons/services/funcs';
 
 const rootRouter: RouteObject =
   {
@@ -30,8 +29,5 @@ const rootRouter: RouteObject =
       MasterRouter,
     ],
   };
-
-console.log(commonFunc.getAllRoutePaths(rootRouter));
-
 
 export default rootRouter;

@@ -50,6 +50,7 @@ async function exAxios<R = any, I = any>(props: ExAxiosProps<I>): Promise<R | Ax
     headers: newHeaders,
     method,
     url,
+    withCredentials: true,
   };
 
   if (method === 'POST' || method === 'PUT' || method === 'PATCH') {

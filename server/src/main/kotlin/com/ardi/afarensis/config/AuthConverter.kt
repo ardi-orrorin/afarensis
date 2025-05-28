@@ -36,17 +36,11 @@ class AuthConverter(
                     val tokens = cookie.split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                     val accessToken = Arrays.stream<String>(tokens)
                         .filter { c: String -> c.contains(ACCESS_COOKIE_NAME) }.findFirst().orElse("")
-//                    val refreshToken = Arrays.stream<String>(tokens)
-//                        .filter { c: String -> c.contains(REFRESH_COOKIE_NAME) }.findFirst().orElse("")
 
                     if (!accessToken.isEmpty()) {
                         return isValidateToken(accessToken.split("=".toRegex()).dropLastWhile { it.isEmpty() }
                             .toTypedArray()[1])
                     }
-//                    else if (!refreshToken.isEmpty()) {
-//                        return isValidateToken(refreshToken.split("=".toRegex()).dropLastWhile { it.isEmpty() }
-//                            .toTypedArray()[1])
-//                    }
                 }
             }
         }
@@ -59,7 +53,9 @@ class AuthConverter(
         val userId: String = claims.get("user", String::class.java)
 
         return userService.findByUsername(userId)
-            .onErrorMap { e -> RuntimeException("유저 정보가 없습니다.") }
-            .map { u -> UsernamePasswordAuthenticationToken(u, token, u.getAuthorities()) }
+            .onErrorMap { RuntimeException("유저 정보가 없습니다.") }
+            .map {
+                UsernamePasswordAuthenticationToken(it, token, it.authorities)
+            }
     }
 }

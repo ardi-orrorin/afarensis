@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { useCookies } from 'react-cookie';
 import { useState } from 'react';
 import { CommonType } from '../types/commonType';
 import commonFunc from '../services/funcs';
 import rootRouter from '../../routers/router';
 import styles from './leftNavigator.module.css';
+import { useCookies } from 'react-cookie';
 import RoutePathObject = CommonType.RoutePathObject;
 
 interface NavigationItemProps {
@@ -13,6 +13,7 @@ interface NavigationItemProps {
     access_token?: string;
     refresh_token?: string;
     roles?: string[];
+    user_id?: string;
   };
 }
 
@@ -24,13 +25,14 @@ const ROLE_RESTRICTED_ROUTES = {
 const AUTH_ROUTES = ['signin', 'signup'] as const;
 
 const LeftNavigator = () => {
-  const [cookies] = useCookies(['access_token', 'refresh_token', 'roles']);
+  const [cookies] = useCookies(['access_token', 'roles', 'user_id']);
   const linkObj = [{ path: '/', name: 'Home' }, ...commonFunc.getAllRoutePaths(rootRouter)] as RoutePathObject[];
+
   return (
     <nav className={styles['nav']}>
       <ul className={styles['nav-container']}>
         {linkObj.map((link) => (
-          <NavigationItem key={link.path} link={link} cookies={cookies} />
+          <NavigationItem key={link.path} {...{ link, cookies }} />
         ))}
       </ul>
     </nav>
@@ -40,7 +42,7 @@ const LeftNavigator = () => {
 const NavigationItem = ({ link, cookies }: NavigationItemProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const isAuthenticated = Boolean(cookies.access_token || cookies.refresh_token);
+  const isAuthenticated = Boolean(cookies.access_token ?? cookies.user_id);
   const hasRequiredRole = (routeName: string): boolean => {
     const requiredRole = ROLE_RESTRICTED_ROUTES[routeName as keyof typeof ROLE_RESTRICTED_ROUTES];
     return !requiredRole || cookies.roles?.includes(requiredRole) || false;

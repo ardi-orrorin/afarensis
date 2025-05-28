@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.ardi"
-version = "0.0.1-SNAPSHOT"
+version = project.properties["version"] ?: "dev-version"
 
 java {
     toolchain {
@@ -18,8 +18,6 @@ java {
         languageVersion = JavaLanguageVersion.of(21)
     }
 }
-
-
 
 configurations {
     compileOnly {
@@ -85,7 +83,6 @@ allOpen {
     annotation("jakarta.persistence.MappedSuperclass")
     annotation("jakarta.persistence.Embeddable")
 }
-
 
 val staticResourceDir = "src/main/resources/static"
 

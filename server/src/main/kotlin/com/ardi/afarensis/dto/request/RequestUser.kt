@@ -32,6 +32,8 @@ class RequestUser {
         val refreshToken: String,
         @field:NotBlank(message = "유저 아이디를 입력해주세요.")
         val userId: String,
+        val ip: String,
+        val userAgent: String,
     ) {}
 
     data class ResetPassword(

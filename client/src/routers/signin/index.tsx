@@ -5,8 +5,6 @@ import styles from './index.module.css';
 import { AxiosError } from 'axios';
 import signInService from './[features]/services/api';
 import { useSignInToken } from '../../commons/hooks/useSiginInToken';
-import { useCookies } from 'react-cookie';
-import signInFunc from './[features]/funcs/signin';
 import { CommonType } from '../../commons/types/commonType';
 import signInSchema from './[features]/types/signInSchema';
 import commonFunc from '../../commons/services/funcs';
@@ -20,7 +18,6 @@ const Index = () => {
   const pwdRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { setToken } = useSignInToken();
-  const [_, setCookie, __] = useCookies(['access_token', 'refresh_token', 'user_id', 'roles']);
 
 
   const isValid = useMemo(() => {
@@ -45,30 +42,6 @@ const Index = () => {
     setLoading(true);
     try {
       const data = await signInService.postSignIn(login);
-      setCookie(
-        'access_token',
-        data.accessToken,
-        signInFunc.createCookieOption({ expiresIn: data.accessTokenExpiresIn }),
-      );
-
-      setCookie(
-        'refresh_token',
-        data.refreshToken,
-        signInFunc.createCookieOption({ expiresIn: data.refreshTokenExpiresIn }),
-      );
-
-      setCookie(
-        'user_id',
-        data.userId,
-        signInFunc.createCookieOption({ expiresIn: data.refreshTokenExpiresIn }),
-      );
-
-      setCookie(
-        'roles',
-        data.roles,
-        signInFunc.createCookieOption({ expiresIn: data.accessTokenExpiresIn }),
-      );
-
       setToken(data);
 
       navigate('/');
@@ -115,7 +88,7 @@ const Index = () => {
                    disabled={loading}
                    type={'password'}
                    onKeyDown={(e) => {
-                     if (e.key !== 'Enter') return;
+                     if (e.key !== 'Enter' || !isValid) return;
                      onClickSubmitHandler();
                    }}
             />
@@ -126,7 +99,7 @@ const Index = () => {
             }
           </div>
           <button onClick={onClickSubmitHandler}
-                  disabled={loading || isValid}
+                  disabled={loading || !isValid}
           >
             {'>'}
           </button>

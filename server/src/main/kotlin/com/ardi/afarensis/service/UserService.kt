@@ -6,13 +6,12 @@ import com.ardi.afarensis.dto.SystemSettingKey
 import com.ardi.afarensis.dto.request.RequestUser
 import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseUser
+import com.ardi.afarensis.exception.UnSignRefreshTokenException
+import com.ardi.afarensis.exception.UnauthorizedException
 import com.ardi.afarensis.provider.TokenProvider
-import com.ardi.afarensis.repository.SystemSettingRepository
 import com.ardi.afarensis.util.StringUtil
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.supervisorScope
-import org.springframework.cloud.context.scope.refresh.RefreshScope
+import kotlinx.coroutines.*
+import kotlinx.coroutines.reactor.mono
 import org.springframework.data.domain.Sort
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService
 import org.springframework.security.core.userdetails.UserDetails
@@ -29,18 +28,17 @@ class UserService(
     private val bCryptPasswordEncoder: BCryptPasswordEncoder,
     private val tokenProvider: TokenProvider,
     private val stringUtil: StringUtil,
-    private val systemSettingRepository: SystemSettingRepository,
-    private val refreshScope: RefreshScope,
+    private val systemSettingService: SystemSettingService
 ) : ReactiveUserDetailsService, BasicService() {
 
-    override fun findByUsername(username: String?): Mono<UserDetails> {
+    override fun findByUsername(username: String?): Mono<UserDetails> = mono {
         val user = userRepository.findByUserId(username!!)
-            ?: return Mono.error(IllegalArgumentException("User not found"))
+            ?: throw IllegalArgumentException("User not found")
 
-        return Mono.just(user.toUserDetailDto())
+        user.toUserDetailDto()
     }
 
-    suspend fun findByUserId(userId: String) = supervisorScope {
+    suspend fun findByUserId(userId: String) = withContext(Dispatchers.IO) {
         userRepository.findByUserId(userId)?.toDto()
             ?: throw IllegalArgumentException("User not found")
     }
@@ -57,7 +55,7 @@ class UserService(
         users.map { it.toDto() }
     }
 
-    suspend fun save(req: RequestUser.SignUp) = supervisorScope {
+    suspend fun save(req: RequestUser.SignUp) = withContext(Dispatchers.IO) {
         if (userRepository.existsByUserId(req.userId)) {
             throw IllegalArgumentException("User already exists")
         }
@@ -70,29 +68,34 @@ class UserService(
     }
 
     @Transactional
-    suspend fun signIn(req: RequestUser.SignIn) = supervisorScope {
+    suspend fun signIn(req: RequestUser.SignIn, ip: String, userAgent: String) = withContext(Dispatchers.IO) {
         val user = userRepository.findByUserId(req.userId) ?: throw RuntimeException("User not found")
 
-        if (!bCryptPasswordEncoder.matches(req.pwd, user.pwd)) {
+        val userDto = user.toDto();
+
+        if (!bCryptPasswordEncoder.matches(req.pwd, userDto.pwd)) {
             throw IllegalArgumentException("Password not matched")
         }
 
-        if (user.userRefreshToken != null) {
+        if (userDto.userRefreshToken != null) {
             user.removeRefreshToken()
             userRepository.save(user)
         }
 
-        val userDto = user.toDto();
-
         val accessToken = async {
             tokenProvider.generateToken(userDto.userId, false)
-        };
+        }
+
         val refreshToken = async {
             tokenProvider.generateToken(userDto.userId, true)
-        };
+        }
 
-
-        user.addRefreshToken(refreshToken.await(), Instant.now().plus(tokenProvider.REFRESH_EXP, ChronoUnit.SECONDS))
+        user.addRefreshToken(
+            refreshToken.await(),
+            ip,
+            userAgent,
+            Instant.now().plus(tokenProvider.REFRESH_EXP, ChronoUnit.SECONDS)
+        )
 
         userRepository.save(user)
 
@@ -107,19 +110,28 @@ class UserService(
     }
 
     @Transactional
-    suspend fun publishAccessToken(req: RequestUser.RefreshToken) = supervisorScope {
+    suspend fun publishAccessToken(req: RequestUser.RefreshToken) = withContext(Dispatchers.IO) {
         val user = userRepository.findByUserId(req.userId)
-            ?: throw IllegalArgumentException("User not found")
+            ?: throw UnauthorizedException("User not found")
 
         user.userRefreshToken?.let { refreshToken ->
             if (refreshToken.refreshToken != req.refreshToken) {
-                throw IllegalArgumentException("Refresh token not matched")
+                throw UnSignRefreshTokenException("Refresh token not matched")
             }
 
             if (refreshToken.expiredAt.isBefore(Instant.now())) {
                 throw IllegalArgumentException("Refresh token expired")
             }
-        } ?: throw IllegalArgumentException("Refresh token not found")
+
+            if (refreshToken.ip != req.ip) {
+                throw UnauthorizedException("IP not matched")
+            }
+
+            if (refreshToken.userAgent != req.userAgent) {
+                throw UnauthorizedException("User agent not matched")
+            }
+
+        } ?: throw UnauthorizedException("Refresh token not found")
 
         val accessToken = tokenProvider.generateToken(user.userId, false)
 
@@ -127,14 +139,14 @@ class UserService(
             accessToken,
             tokenProvider.ACCESS_EXP,
             "",
-            0L,
+            tokenProvider.REFRESH_EXP,
             user.userId,
             user.userRoles.map { it.role }.toSet(),
         )
     }
 
     @Transactional
-    suspend fun signOut(userId: String) = supervisorScope {
+    suspend fun signOut(userId: String) = withContext(Dispatchers.IO) {
         val user = userRepository.findByUserId(userId)
             ?: throw IllegalArgumentException("User not found")
 
@@ -149,7 +161,7 @@ class UserService(
     }
 
     @Transactional
-    suspend fun sendVerifyCode(req: RequestUser.ResetPassword) = supervisorScope {
+    suspend fun sendVerifyCode(req: RequestUser.ResetPassword) = withContext(Dispatchers.IO) {
         val user = userRepository.findByUserId(req.userId)
             ?: throw IllegalArgumentException("User not found")
 
@@ -164,7 +176,7 @@ class UserService(
 
 
     @Transactional
-    suspend fun resetPassword(req: RequestUser.ResetPassword) = supervisorScope {
+    suspend fun resetPassword(req: RequestUser.ResetPassword) = withContext(Dispatchers.IO) {
         if (req.code.isNullOrEmpty()) {
             throw IllegalArgumentException("Invalid verification code")
         }
@@ -210,16 +222,7 @@ class UserService(
         master.email = req.email
 
 
-        val init = systemSettingRepository.findByKey(SystemSettingKey.INIT)
-            ?: throw RuntimeException("System not Init")
-        init.value = mapOf(
-            "initialized" to true,
-            "isUpdatedMasterPwd" to true,
-        )
-
-        systemSettingRepository.save(init)
-
-        refreshScope.refresh("systemSetting")
+        systemSettingService.updateInit()
 
         ResponseStatus(
             ResStatus.SUCCESS,

@@ -1,6 +1,7 @@
 package com.ardi.afarensis.entity
 
 import jakarta.persistence.*
+import org.hibernate.annotations.SQLRestriction
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -9,9 +10,13 @@ import java.time.temporal.ChronoUnit
 class UserVerifyEmail(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0,
+    var id: Long? = null,
     var verifyKey: String = "",
+
+    @SQLRestriction("available = true")
     var available: Boolean = true,
+
+    @SQLRestriction("expired_at > now()")
     var expiredAt: Instant = Instant.now().plus(5, ChronoUnit.MINUTES),
 
     @ManyToOne

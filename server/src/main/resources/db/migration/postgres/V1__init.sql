@@ -33,6 +33,8 @@ CREATE TABLE users_refresh_token
     id            BIGSERIAL PRIMARY KEY,
     users_pk      BIGINT,
     refresh_token VARCHAR(500),
+    ip            VARCHAR(50),
+    user_agent    VARCHAR(500),
     expired_at    TIMESTAMP NOT NULL
 );
 

@@ -9,8 +9,10 @@ import java.time.Instant
 @Table(name = "system_logs")
 @Entity
 class SystemLog(
+
     @Id
-    var id: Long? = 0,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
 
     var message: String,
 

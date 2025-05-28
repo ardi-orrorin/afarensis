@@ -1,3 +1,11 @@
+server:
+  ssl:
+    enabled: true
+    key-alias: test
+    key-store: classpath:test.keystore
+    key-store-password: testtest
+    key-password: testtest
+
 spring:
   jpa:
     hibernate:
@@ -37,10 +45,6 @@ jwt:
 #file:
 #  storage:
 #    dir: /Users/yuseungcheol/Desktop/test
-
-pageable:
-  page: 1
-  size: 20
 
 #logging:
 #  level:
