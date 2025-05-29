@@ -20,6 +20,13 @@ class PublicUserController(
 
 ) : BasicController() {
 
+    @GetMapping("exist-id/{userId}")
+    suspend fun existUserId(
+        @PathVariable userId: String
+    ) = supervisorScope {
+        userService.existByUserId(userId)
+    }
+
     @PostMapping("signup")
     suspend fun singUp(
         @Valid @RequestBody req: RequestUser.SignUp
@@ -50,7 +57,7 @@ class PublicUserController(
                 }
             }
         }.awaitAll()
-        
+
         val res = ResponseStatus(
             status = ResStatus.SUCCESS,
             message = "successfully sign in",

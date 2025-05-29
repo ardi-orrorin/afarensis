@@ -73,6 +73,10 @@ class User(
             )
     }
 
+    fun addVerifyEmail(verifyCode: String) {
+        userVerifyEmails.add(UserVerifyEmail(verifyKey = verifyCode, user = this))
+    }
+
     fun removeRefreshToken() {
         userRefreshToken = null
     }

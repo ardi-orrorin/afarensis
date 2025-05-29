@@ -16,7 +16,7 @@ const authMiddleware = async () => {
   const userId = cookies.find((cookie) => cookie.includes('user_id'));
 
   if (!userId) {
-    throw new Error('로그인이 필요합니다.');
+    return;
   }
 
   try {

@@ -12,6 +12,7 @@ import systemSettingQuery from './master/system-setting/[features]/stores/query'
 import { SystemSetting } from './master/system-setting/[features]/types/systemSetting';
 import { useMemo } from 'react';
 import InitMaster from './[features]/components/initMaster';
+import { ModalProvider } from '../commons/hooks/useModal';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -19,7 +20,7 @@ dayjs.extend(timezone);
 const RootLayout = () => {
 
   const { data } = systemSettingQuery.publicQuery();
-  
+
   const isUpdatedMaster = useMemo(() => {
     const init = data[SystemSetting.PublicKey.INIT].value;
     return init.isUpdatedMasterPwd && init.isUpdatedMasterPwd;
@@ -29,17 +30,19 @@ const RootLayout = () => {
 
   return (
     <div className={`${styles['container']}`}>
-      <SignInTokenProvider>
-        <HistoryPageProvider>
-          <LeftNavigator />
-          <main>
-            <Outlet />
-          </main>
-          <footer>
-            <HistoryPage />
-          </footer>
-        </HistoryPageProvider>
-      </SignInTokenProvider>
+      <ModalProvider>
+        <SignInTokenProvider>
+          <HistoryPageProvider>
+            <LeftNavigator />
+            <main>
+              <Outlet />
+            </main>
+            <footer>
+              <HistoryPage />
+            </footer>
+          </HistoryPageProvider>
+        </SignInTokenProvider>
+      </ModalProvider>
     </div>
   );
 };

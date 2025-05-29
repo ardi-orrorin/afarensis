@@ -8,6 +8,7 @@ import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseUser
 import com.ardi.afarensis.exception.UnSignRefreshTokenException
 import com.ardi.afarensis.exception.UnauthorizedException
+import com.ardi.afarensis.provider.MailProvider
 import com.ardi.afarensis.provider.TokenProvider
 import com.ardi.afarensis.util.StringUtil
 import kotlinx.coroutines.*
@@ -28,7 +29,8 @@ class UserService(
     private val bCryptPasswordEncoder: BCryptPasswordEncoder,
     private val tokenProvider: TokenProvider,
     private val stringUtil: StringUtil,
-    private val systemSettingService: SystemSettingService
+    private val systemSettingService: SystemSettingService,
+    private val mailProvider: MailProvider,
 ) : ReactiveUserDetailsService, BasicService() {
 
     override fun findByUsername(username: String?): Mono<UserDetails> = mono {
@@ -41,6 +43,16 @@ class UserService(
     suspend fun findByUserId(userId: String) = withContext(Dispatchers.IO) {
         userRepository.findByUserId(userId)?.toDto()
             ?: throw IllegalArgumentException("User not found")
+    }
+
+    suspend fun existByUserId(userId: String) = withContext(Dispatchers.IO) {
+        val isExist = userRepository.existsByUserId(userId)
+
+        ResponseStatus(
+            status = ResStatus.SUCCESS,
+            message = if (isExist) "계정이 존재 합니다" else "사용가능한 아이디 입니다.",
+            !isExist
+        )
     }
 
 
@@ -161,7 +173,7 @@ class UserService(
     }
 
     @Transactional
-    suspend fun sendVerifyCode(req: RequestUser.ResetPassword) = withContext(Dispatchers.IO) {
+    suspend fun resetPassword(req: RequestUser.ResetPassword) = withContext(Dispatchers.IO) {
         val user = userRepository.findByUserId(req.userId)
             ?: throw IllegalArgumentException("User not found")
 
@@ -169,31 +181,20 @@ class UserService(
             throw IllegalArgumentException("Email not matched")
         }
 
-        val verifyCode = stringUtil.generateStr(6)
+        val newPwd = stringUtil.generateStr(20)
 
-        // TODO: send email
-    }
-
-
-    @Transactional
-    suspend fun resetPassword(req: RequestUser.ResetPassword) = withContext(Dispatchers.IO) {
-        if (req.code.isNullOrEmpty()) {
-            throw IllegalArgumentException("Invalid verification code")
-        }
-
-        val user = userRepository.findByUserId(req.userId)
-            ?: throw RuntimeException("User not found")
-
-
-        val verifyEmail = user.userVerifyEmails.find { it.verifyKey == req.code }
-            ?: throw IllegalArgumentException("Invalid verification code")
-        if (verifyEmail.expiredAt.isBefore(Instant.now())) {
-            throw IllegalArgumentException("Email verification token expired")
-        }
-
-        val newPwd = bCryptPasswordEncoder.encode(stringUtil.generateStr(10))
         user.pwd = newPwd
-        userRepository.save(user)
+
+        val addCoded = async {
+            userRepository.save(user)
+        }
+
+        val sentEmail = async {
+            mailProvider.sendMail("Reset Password", "Your new password is $newPwd", req.email)
+        }
+
+        addCoded.await()
+        sentEmail.await()
 
         ResponseStatus(
             ResStatus.SUCCESS,
@@ -201,6 +202,7 @@ class UserService(
             true,
         )
     }
+
 
     @Transactional
     fun updateMaster(req: RequestUser.InitMasterUpdate, role: Role) = runBlocking {
@@ -230,4 +232,6 @@ class UserService(
             true,
         )
     }
+
+
 }

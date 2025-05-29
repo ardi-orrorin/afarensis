@@ -7,6 +7,7 @@ import { SignUp } from './[features]/types/signUp';
 import signUpSchema from './[features]/types/signUpSchema';
 import { CommonType } from '../../commons/types/commonType';
 import commonFunc from '../../commons/services/funcs';
+import FormErrors = CommonType.FormErrors;
 
 const Index = () => {
   const [signUp, setSignUp] = useState({} as SignUp.SignUpInput);
@@ -21,9 +22,11 @@ const Index = () => {
   }, [signUp]);
 
   const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.name;
+
     setSignUp({
       ...signUp,
-      [e.target.name]: e.target.value,
+      [name]: e.target.value,
     });
 
     const result =
@@ -36,7 +39,15 @@ const Index = () => {
     const subtractRequired =
       commonFunc.subtractRequiredStr(fieldErrors);
 
-    setErrors(subtractRequired);
+    if (name !== 'userId') {
+      setErrors(prevState => ({
+        ...subtractRequired,
+        userId: prevState.userId,
+      } as FormErrors<SignUp.SignUpInput>));
+    } else {
+      setErrors(subtractRequired);
+    }
+
     setLoading(false);
 
   };
@@ -60,6 +71,21 @@ const Index = () => {
     }
   };
 
+  const checkExistByUserId = async () => {
+    try {
+      const res = await signUpService.getExistByUserId(signUp.userId);
+
+      setErrors(prevState => ({
+        ...prevState,
+        userId: res.data ? prevState.userId : '이미 존재하는 아이디입니다.',
+      } as FormErrors<SignUp.SignUpInput>));
+
+    } catch (e) {
+      const err = e as AxiosError;
+      commonFunc.axiosError(err);
+    }
+  };
+
 
   const resetHandler = () => {
     setSignUp({} as SignUp.SignUpInput);
@@ -74,6 +100,8 @@ const Index = () => {
                onChange={onChangeHandler}
                disabled={loading}
                placeholder={'아이디를 입력하세요'}
+               onBlur={checkExistByUserId}
+               autoFocus
         />
         {
           errors?.userId

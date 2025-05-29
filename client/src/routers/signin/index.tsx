@@ -8,6 +8,7 @@ import { useSignInToken } from '../../commons/hooks/useSiginInToken';
 import { CommonType } from '../../commons/types/commonType';
 import signInSchema from './[features]/types/signInSchema';
 import commonFunc from '../../commons/services/funcs';
+import { useModal } from '../../commons/hooks/useModal';
 
 
 const Index = () => {
@@ -18,6 +19,7 @@ const Index = () => {
   const pwdRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { setToken } = useSignInToken();
+  const { addModal } = useModal();
 
 
   const isValid = useMemo(() => {
@@ -56,6 +58,15 @@ const Index = () => {
 
   const onClickResetHandler = () => {
     setLogin({} as SignIn.Request);
+  };
+  const findPasswordHandler = () => {
+    addModal({
+      children: <></>,
+      isOpen: true,
+      onClose: () => {
+        console.log('close');
+      },
+    });
   };
 
   return (
@@ -107,10 +118,17 @@ const Index = () => {
         <div>
           <button onClick={onClickResetHandler}
                   disabled={loading}
+                  className={styles['reset']}
           >
             Reset
           </button>
           <Link to={'/signup'}> Sign Up </Link>
+          <button onClick={findPasswordHandler}
+                  disabled={loading}
+                  className={styles['find-password']}
+          >
+            Find Password
+          </button>
         </div>
       </div>
     </div>

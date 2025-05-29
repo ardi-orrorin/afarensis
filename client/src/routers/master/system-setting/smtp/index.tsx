@@ -144,7 +144,7 @@ const Index = () => {
   ] as SystemSetting.SettingTemplateInput[];
 
   const buttons = [
-    { text: '저장', onClick: saveHandle, disabled: loading || !isTested },
+    { text: '저장', onClick: saveHandle, disabled: loading || isTested },
     { text: '테스트', onClick: submitTest, disabled: loading },
     { text: '초기화', onClick: initHandle, disabled: loading },
   ] as SystemSetting.SettingTemplateBtn[];

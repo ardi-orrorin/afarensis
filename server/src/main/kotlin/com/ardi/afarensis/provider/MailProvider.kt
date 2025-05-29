@@ -54,7 +54,6 @@ class MailProvider(
 
         if (!(smtp.value["enabled"] as Boolean)) return@withContext
 
-
         val message = SimpleMailMessage().apply {
             setTo(to)
             setSubject(subject)
