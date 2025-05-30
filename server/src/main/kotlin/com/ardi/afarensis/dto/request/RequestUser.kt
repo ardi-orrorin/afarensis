@@ -50,4 +50,11 @@ class RequestUser {
         @field:Email(message = "이메일 형식이 아닙니다.")
         val email: String
     )
+
+    data class UpdatePassword(
+        @field:NotBlank(message = "비밀번호를 입력해주세요.")
+        val pwd: String,
+        @field:NotBlank(message = "새로운 비밀번호를 입력해주세요.")
+        val newPwd: String,
+    )
 }

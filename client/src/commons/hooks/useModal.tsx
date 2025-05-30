@@ -5,6 +5,8 @@ import { v5 as uuidv5 } from 'uuid';
 
 type ModalContextT = {
   addModal: (params: ModalTypes.ModalParams) => void;
+  viewModal: ModalTypes.ModalProps | undefined;
+  onClose: (id: string) => void;
 }
 
 const ModalContext = createContext({} as ModalContextT);
@@ -14,13 +16,20 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
   const [modals, setModals] = useState([] as ModalTypes.ModalProps[]);
 
   const viewModal = useMemo(() =>
-      modals.find(modal => modal.isOpen)
+      modals.findLast(modal => modal.isOpen)
     , [modals]);
 
-  const addModal = ({ children, isOpen }: ModalTypes.ModalParams) => {
+  const addModal = ({ title, children, isOpen }: ModalTypes.ModalParams) => {
     const id = uuidv5(uuidv5.URL, uuidv5.DNS);
 
-    setModals(prev => [...prev, { priority: prev.length + 1, id, children, isOpen, onClose: () => onClose(id) }]);
+    setModals(prev => [...prev, {
+      priority: prev.length + 1,
+      id,
+      title,
+      children,
+      isOpen,
+      onClose: () => onClose(id),
+    }]);
   };
 
   const onClose = (id: string) => {
@@ -33,7 +42,7 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <ModalContext.Provider value={{
-      addModal,
+      addModal, viewModal, onClose,
     }}>
       {children}
       {

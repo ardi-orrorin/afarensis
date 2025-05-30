@@ -8,17 +8,14 @@ import commonFunc from './funcs';
 const authMiddleware = async () => {
 
   const cookies = document.cookie.split(';');
+  const userId = cookies.find((cookie) => cookie.includes('user_id'));
+  if (!userId) return;
+
   const accessToken = cookies.find((cookie) => cookie.startsWith('access_token'));
   const roles = cookies.find((cookie) => cookie.startsWith('roles'));
 
   if (accessToken && roles) return true;
-
-  const userId = cookies.find((cookie) => cookie.includes('user_id'));
-
-  if (!userId) {
-    return;
-  }
-
+  
   try {
     await ExAxios<SignIn.Token, CommonType.PublishRefreshToken>({
       method: 'GET',

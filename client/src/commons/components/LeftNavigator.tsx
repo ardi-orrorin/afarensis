@@ -5,7 +5,10 @@ import commonFunc from '../services/funcs';
 import rootRouter from '../../routers/router';
 import styles from './leftNavigator.module.css';
 import { useCookies } from 'react-cookie';
+import systemSettingQuery from '../../routers/master/system-setting/[features]/stores/query';
+import { SystemSetting } from '../../routers/master/system-setting/[features]/types/systemSetting';
 import RoutePathObject = CommonType.RoutePathObject;
+import PublicKey = SystemSetting.PublicKey;
 
 interface NavigationItemProps {
   link: RoutePathObject;
@@ -20,6 +23,7 @@ interface NavigationItemProps {
 const ROLE_RESTRICTED_ROUTES = {
   master: 'MASTER',
   admin: 'ADMIN',
+  user: 'USER',
 } as const;
 
 const AUTH_ROUTES = ['signin', 'signup'] as const;
@@ -41,17 +45,22 @@ const LeftNavigator = () => {
 
 const NavigationItem = ({ link, cookies }: NavigationItemProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { data: publicData } = systemSettingQuery.publicQuery();
+  const signUp = publicData[PublicKey.SIGN_UP].value;
 
   const isAuthenticated = Boolean(cookies.access_token ?? cookies.user_id);
+
   const hasRequiredRole = (routeName: string): boolean => {
     const requiredRole = ROLE_RESTRICTED_ROUTES[routeName as keyof typeof ROLE_RESTRICTED_ROUTES];
     return !requiredRole || cookies.roles?.includes(requiredRole) || false;
   };
 
   const shouldHideLink = (): boolean => {
-    if (AUTH_ROUTES.includes(link.name as any) && isAuthenticated) return true;
-    if (link.name === 'signout' && !isAuthenticated) return true;
-    if (!hasRequiredRole(link.name)) return true;
+    const pathName = link.path.replace('/', '');
+    if (AUTH_ROUTES.includes(pathName as any) && isAuthenticated) return true;
+    if (pathName === 'signout' && !isAuthenticated) return true;
+    if (pathName === 'signup' && !signUp.enabled) return true;
+    if (!hasRequiredRole(pathName)) return true;
     return false;
   };
 
@@ -59,32 +68,49 @@ const NavigationItem = ({ link, cookies }: NavigationItemProps) => {
     return null;
   }
 
-  const toggleSubmenu = () => setIsOpen((prev) => !prev);
+  const toggleSubmenu = () =>
+    setIsOpen((prev) => !prev);
 
   return (
     <li className={styles['nav-item']}>
       <div className={styles['nav-link-container']}>
-        <Link to={link.path} className={styles['nav-link']}>
-          {link.name.toLocaleUpperCase()}
-        </Link>
-        {link.children && (
-          <button
-            className={styles['toggle-button']}
-            onClick={toggleSubmenu}
-            aria-expanded={isOpen}
-            aria-label={`Toggle ${link.name} submenu`}
+        {
+          link.children
+            ? <button className={styles['nav-btn']}
+                      onClick={toggleSubmenu}
+            >
+              {link.name}
+            </button>
+            : <Link to={link.path}
+                    className={styles['nav-link']}
+            >
+              {link.name}
+            </Link>
+        }
+        {
+          link.children
+          && <button className={styles['toggle-button']}
+                     onClick={toggleSubmenu}
+                     aria-expanded={isOpen}
+                     aria-label={`Toggle ${link.name} submenu`}
           >
-            <span className={`${styles['arrow']} ${isOpen ? styles['arrow-up'] : styles['arrow-down']}`}>▼</span>
+            <span className={`${styles['arrow']} ${isOpen ? styles['arrow-up'] : styles['arrow-down']}`}
+            >
+              ▼
+            </span>
           </button>
-        )}
+        }
       </div>
-      {link.children && (
-        <ul className={`${styles['submenu']} ${isOpen ? styles['submenu-open'] : ''}`}>
-          {link.children.map((child) => (
-            <NavigationItem key={child.path} link={child} cookies={cookies} />
-          ))}
+      {
+        link.children
+        && <ul className={`${styles['submenu']} ${isOpen ? styles['submenu-open'] : ''}`}>
+          {
+            link.children.map((child) => (
+              <NavigationItem key={child.path} link={child} cookies={cookies} />
+            ))
+          }
         </ul>
-      )}
+      }
     </li>
   );
 };

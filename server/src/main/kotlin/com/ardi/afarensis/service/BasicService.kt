@@ -21,4 +21,6 @@ open class BasicService {
     fun getCacheSystemSetting(): Map<SystemSettingKey, SystemSettingDto> {
         return systemSetting.getSystemSetting()
     }
+
+
 }

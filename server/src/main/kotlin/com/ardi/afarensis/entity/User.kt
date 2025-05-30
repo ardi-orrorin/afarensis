@@ -28,7 +28,7 @@ class User(
     var deletedAt: Instant? = null,
 
     var isDeleted: Boolean = false,
-    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
     var userRoles: MutableSet<UserRole> = mutableSetOf(),
 
     @OneToOne(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)

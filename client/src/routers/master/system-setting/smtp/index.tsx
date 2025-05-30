@@ -3,7 +3,7 @@ import { SystemSetting } from '../[features]/types/systemSetting';
 import { useEffect, useState } from 'react';
 import styles from './index.module.css';
 import { CommonType } from '../../../../commons/types/commonType';
-import smtpServiceApi from './[features]/service/api';
+import smtpServiceApi from './[features]/services/api';
 import { AxiosError } from 'axios';
 import systemSettingServiceApi from '../[features]/service/api';
 import SettingItemTemplate from '../[features]/components/settingItemTemplate';
@@ -11,6 +11,7 @@ import Toggle from '../[features]/components/toggle';
 import systemSettingFunc from '../[features]/service/func';
 import commonFunc from '../../../../commons/services/funcs';
 import PrivateKey = SystemSetting.PrivateKey;
+
 
 const Index = () => {
   const { data: privateData, refetch } = systemSettingQuery.privateQuery();
@@ -68,7 +69,8 @@ const Index = () => {
       setResponse(res);
     } catch (e) {
       const err = e as AxiosError;
-      commonFunc.axiosError(err);
+      commonFunc.setResponseError(err, setResponse);
+
     } finally {
       setLoading(false);
     }
@@ -88,7 +90,8 @@ const Index = () => {
       setIsTested(false);
     } catch (e) {
       const err = e as AxiosError;
-      commonFunc.axiosError(err);
+      commonFunc.setResponseError(err, setResponse);
+
     } finally {
       setLoading(false);
     }
@@ -100,10 +103,12 @@ const Index = () => {
       const res = await systemSettingServiceApi.putInit(PrivateKey.SMTP);
       await refetch();
       setResponse(res);
+
       setIsTested(false);
     } catch (e) {
       const err = e as AxiosError;
-      commonFunc.axiosError(err);
+      commonFunc.setResponseError(err, setResponse);
+
     } finally {
       setLoading(false);
     }
@@ -144,7 +149,7 @@ const Index = () => {
   ] as SystemSetting.SettingTemplateInput[];
 
   const buttons = [
-    { text: '저장', onClick: saveHandle, disabled: loading || isTested },
+    { text: '저장', onClick: saveHandle, disabled: loading || !isTested },
     { text: '테스트', onClick: submitTest, disabled: loading },
     { text: '초기화', onClick: initHandle, disabled: loading },
   ] as SystemSetting.SettingTemplateBtn[];
@@ -152,7 +157,7 @@ const Index = () => {
   const otherChildren =
     <Toggle  {...{
       checked: value.enabled,
-      disabled: loading || isTested,
+      disabled: loading || !isTested,
       onChange: changeToggle,
     }} />;
 

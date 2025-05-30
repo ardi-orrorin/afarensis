@@ -2,6 +2,7 @@ package com.ardi.afarensis.exception
 
 import com.ardi.afarensis.controller.BasicController
 import kotlinx.coroutines.runBlocking
+import org.apache.hc.client5.http.auth.AuthenticationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.server.reactive.ServerHttpResponse
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -15,8 +16,10 @@ class ExceptionAdviceController : BasicController() {
 
     @ExceptionHandler(UnauthorizedException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    fun handleUnauthorizedException(ex: UnauthorizedException): ErrorResponse {
-        return ErrorResponse(
+    fun handleUnauthorizedException(ex: UnauthorizedException, res: ServerHttpResponse): ErrorResponse = runBlocking {
+        removeCookie(res)
+
+        ErrorResponse(
             message = ex.message ?: "Unauthorized",
             errorCode = "UNAUTHORIZED",
             timestamp = LocalDateTime.now(),
@@ -33,6 +36,19 @@ class ExceptionAdviceController : BasicController() {
             ErrorResponse(
                 message = ex.message ?: "UnSignRefreshToken",
                 errorCode = "UNAUTHORIZED",
+                timestamp = LocalDateTime.now()
+            )
+        }
+
+    @ExceptionHandler(AuthenticationException::class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    fun handleAuthenticationException(ex: AuthenticationException, res: ServerHttpResponse): ErrorResponse =
+        runBlocking {
+            removeCookie(res)
+
+            ErrorResponse(
+                message = ex.message ?: "Authentication failed",
+                errorCode = "AUTHENTICATION_FAILED",
                 timestamp = LocalDateTime.now()
             )
         }

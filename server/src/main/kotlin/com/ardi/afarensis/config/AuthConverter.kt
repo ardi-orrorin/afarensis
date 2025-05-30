@@ -25,14 +25,14 @@ class AuthConverter(
         var auth = headers.getFirst("Authorization")
         val cookies = headers.getOrEmpty("Cookie")
 
-        if (auth != null && auth.startsWith(COOKIE_NAME + " ")) {
+        if (auth != null && auth.contains(COOKIE_NAME + " ")) {
             auth = auth.substring(COOKIE_NAME.length + 1)
             return isValidateToken(auth)
         }
 
         if (!cookies.isEmpty()) {
             for (cookie in cookies) {
-                if (cookie.startsWith(ACCESS_COOKIE_NAME + "=") || cookie.startsWith(REFRESH_COOKIE_NAME + "=")) {
+                if (cookie.contains(ACCESS_COOKIE_NAME + "=") || cookie.contains(REFRESH_COOKIE_NAME + "=")) {
                     val tokens = cookie.split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                     val accessToken = Arrays.stream<String>(tokens)
                         .filter { c: String -> c.contains(ACCESS_COOKIE_NAME) }.findFirst().orElse("")
@@ -44,6 +44,7 @@ class AuthConverter(
                 }
             }
         }
+
 
         return Mono.empty()
     }

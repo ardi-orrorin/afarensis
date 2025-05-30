@@ -1,4 +1,3 @@
-import { RouteObject } from 'react-router-dom';
 import Root from '.';
 import RootLayout from './layout';
 import ErrorComponent from '../commons/components/errorComponent';
@@ -9,10 +8,14 @@ import SignOutRouter from './signout/router';
 import MasterRouter from './master/router';
 import systemSettingQuery from './master/system-setting/[features]/stores/query';
 import authMiddleware from '../commons/services/middleware';
+import UserRouter from './user/router';
+import { CommonType } from '../commons/types/commonType';
+import ExRouteObject = CommonType.ExRouteObject;
 
-const rootRouter: RouteObject =
+const rootRouter: ExRouteObject =
   {
     path: '/',
+    name: 'Home',
     Component: RootLayout,
     errorElement: <ErrorComponent />,
     unstable_middleware: [authMiddleware],
@@ -29,6 +32,7 @@ const rootRouter: RouteObject =
       SignInRouter,
       SignOutRouter,
       MasterRouter,
+      UserRouter,
     ],
   };
 

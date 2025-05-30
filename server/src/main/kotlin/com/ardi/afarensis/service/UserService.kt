@@ -183,14 +183,14 @@ class UserService(
 
         val newPwd = stringUtil.generateStr(20)
 
-        user.pwd = newPwd
+        user.pwd = bCryptPasswordEncoder.encode(newPwd)
 
         val addCoded = async {
             userRepository.save(user)
         }
 
         val sentEmail = async {
-            mailProvider.sendMail("Reset Password", "Your new password is $newPwd", req.email)
+            mailProvider.sendMail(req.email, "Reset Password", "Your new password is $newPwd")
         }
 
         addCoded.await()
@@ -203,14 +203,14 @@ class UserService(
         )
     }
 
-
     @Transactional
     fun updateMaster(req: RequestUser.InitMasterUpdate, role: Role) = runBlocking {
         val sysInit = getCacheSystemSettingKey(SystemSettingKey.INIT)
         val sysInitValue = sysInit?.value ?: throw RuntimeException("System not Init value")
         val initialized = sysInitValue["initialized"] as Boolean
         val isUpdatedMasterPwd = sysInitValue["isUpdatedMasterPwd"] as Boolean
-        if ((role == Role.GUEST || role == Role.USER || role == Role.ADMIN) && (initialized || isUpdatedMasterPwd)) {
+        val confirmRoles = listOf(Role.GUEST, Role.USER, Role.ADMIN)
+        if (confirmRoles.contains(role) && (initialized || isUpdatedMasterPwd)) {
             return@runBlocking ResponseStatus(
                 ResStatus.FAILED,
                 "Master password already updated",
@@ -234,4 +234,22 @@ class UserService(
     }
 
 
+    suspend fun updatePassword(id: Long, req: RequestUser.UpdatePassword) = withContext(Dispatchers.IO) {
+        val user = userRepository.findById(id).orElseThrow { IllegalArgumentException("User not found") }
+        val userDto = user.toDto()
+
+        if (!bCryptPasswordEncoder.matches(req.pwd, userDto.pwd)) {
+            throw IllegalArgumentException("Password not match")
+        }
+
+        user.pwd = bCryptPasswordEncoder.encode(req.newPwd)
+
+        userRepository.save(user)
+
+        ResponseStatus(
+            ResStatus.SUCCESS,
+            "Password updated",
+            true,
+        )
+    }
 }

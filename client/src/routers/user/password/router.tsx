@@ -1,12 +1,12 @@
 import Layout from './layout';
 import Index from '.';
-import { CommonType } from '../../../../commons/types/commonType';
+import { CommonType } from '../../../commons/types/commonType';
 import ExRouteObject = CommonType.ExRouteObject;
 
-const SmtpRouter: ExRouteObject = {
-  id: 'root/master/system-setting/smtp',
-  path: 'smtp',
-  name: 'Smtp',
+const PasswordRouter: ExRouteObject = {
+  id: 'root/user/password',
+  path: 'password',
+  name: 'Update Password',
   Component: Layout,
   loader: async () => {
   },
@@ -15,7 +15,8 @@ const SmtpRouter: ExRouteObject = {
       index: true,
       Component: Index,
     },
+
   ],
 };
 
-export default SmtpRouter;
+export default PasswordRouter;

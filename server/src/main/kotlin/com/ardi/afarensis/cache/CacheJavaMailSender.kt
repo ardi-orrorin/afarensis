@@ -20,13 +20,15 @@ class CacheJavaMailSender(
         val smtp = cacheSystemSetting.getSystemSetting()[SystemSettingKey.SMTP]?.value
         val enabled = smtp?.get("enabled") as Boolean
         val mailSender = JavaMailSenderImpl();
+        mailSender.protocol = "smtp"
 
         val props = mailSender.javaMailProperties
 
-        props["mail.transport.protocol"] = "smtp"
         props["mail.smtp.auth"] = "true"
         props["mail.smtp.starttls.enable"] = "true"
-        props["mail.debug"] = "true"
+        props["mail.smtp.timeout"] = "5000"
+        props["mail.smtp.connectiontimeout"] = "5000"
+        props["mail.smtp.writetimeout"] = "5000"
 
         if (!enabled) {
             log.warn("SMTP is disabled")

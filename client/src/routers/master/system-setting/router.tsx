@@ -1,13 +1,15 @@
-import { RouteObject } from 'react-router-dom';
 import Layout from './layout';
 import Index from '.';
 import systemSettingQuery from './[features]/stores/query';
 import SmtpRouter from './smtp/router';
 import UserRouter from './user/router';
+import { CommonType } from '../../../commons/types/commonType';
+import ExRouteObject = CommonType.ExRouteObject;
 
-const SystemSettingRouter: RouteObject = {
+const SystemSettingRouter: ExRouteObject = {
   id: 'root/master/system-setting',
   path: 'system-setting',
+  name: 'System-Setting',
   Component: Layout,
   loader: async () => {
     await systemSettingQuery.privateQuery().prefetch();

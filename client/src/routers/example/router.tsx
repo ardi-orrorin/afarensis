@@ -1,13 +1,15 @@
-import { RouteObject } from 'react-router-dom';
 import exampleQuery from './[features]/stores/query';
 import Layout from './layout';
 import Index from '.';
 import authMiddleware from '../../commons/services/middleware';
+import { CommonType } from '../../commons/types/commonType';
+import ExRouteObject = CommonType.ExRouteObject;
 
 
-const ExampleRouter: RouteObject = {
+const ExampleRouter: ExRouteObject = {
   id: 'root/exmaple',
   path: 'example',
+  name: 'Example',
   Component: Layout,
   unstable_middleware: [authMiddleware],
   shouldRevalidate: () => false,

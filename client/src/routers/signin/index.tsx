@@ -9,6 +9,7 @@ import { CommonType } from '../../commons/types/commonType';
 import signInSchema from './[features]/types/signInSchema';
 import commonFunc from '../../commons/services/funcs';
 import { useModal } from '../../commons/hooks/useModal';
+import FindPassword from './[features]/components/findPassword';
 
 
 const Index = () => {
@@ -45,8 +46,9 @@ const Index = () => {
     try {
       const data = await signInService.postSignIn(login);
       setToken(data);
-
+      
       navigate('/');
+
     } catch (e) {
       const err = e as AxiosError;
       console.log(err);
@@ -61,11 +63,9 @@ const Index = () => {
   };
   const findPasswordHandler = () => {
     addModal({
-      children: <></>,
+      title: 'Find Password',
       isOpen: true,
-      onClose: () => {
-        console.log('close');
-      },
+      children: <FindPassword />,
     });
   };
 

@@ -1,14 +1,15 @@
-import { RouteObject } from 'react-router-dom';
 import Layout from './layout';
 import Index from '.';
 import SystemSettingRouter from './system-setting/router';
-import authMiddleware from '../../commons/services/middleware';
+import { CommonType } from '../../commons/types/commonType';
+import ExRouteObject = CommonType.ExRouteObject;
 
-const MasterRouter: RouteObject = {
+const MasterRouter: ExRouteObject = {
   id: 'root/master',
   path: 'master',
+  name: 'Master',
   Component: Layout,
-  unstable_middleware: [authMiddleware],
+  // unstable_middleware: [authMiddleware],
   loader: async () => {
   },
   children: [

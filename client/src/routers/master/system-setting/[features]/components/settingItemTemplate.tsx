@@ -73,8 +73,10 @@ const SettingItemTemplate =
           </div>
         }
         {
-          response.data
-          && <p className={styles['success']}>{response.message}</p>
+          response.status
+          && <p className={styles[response.data ? 'success' : 'error']}>
+            {response.message}
+          </p>
         }
       </div>
     );

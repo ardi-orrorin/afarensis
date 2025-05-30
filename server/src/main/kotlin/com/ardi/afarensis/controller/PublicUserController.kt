@@ -67,6 +67,13 @@ class PublicUserController(
         ResponseEntity.ok(res)
     }
 
+    @PostMapping("reset-password")
+    suspend fun resetPassword(
+        @Valid @RequestBody req: RequestUser.ResetPassword
+    ) = supervisorScope {
+        userService.resetPassword(req)
+    }
+
     @GetMapping("refresh")
     suspend fun publishAccessToken(
         request: ServerHttpRequest,

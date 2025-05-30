@@ -1,4 +1,5 @@
 import { QueryState } from '@tanstack/react-query';
+import { IndexRouteObject, RouteObject } from 'react-router-dom';
 
 type CreateQueryActionsT<T> = {
   prefetch: () => Promise<void>;
@@ -34,7 +35,7 @@ type PublishRefreshTokenT = {
 }
 
 type FormErrorsT<T> = {
-  [key in keyof T]?: string;
+  [key in keyof T]?: string | string[];
 } & {
   [key: string]: string [] | undefined;
 }
@@ -43,6 +44,14 @@ interface RoutePathObjectI {
   path: string;
   name: string;
   children?: RoutePathObjectI[];
+}
+
+type ExRouteObjectT = RouteObject & {
+  name: string;
+}
+
+type ExIndexRouteObjectT = IndexRouteObject & {
+  name: string;
 }
 
 
@@ -55,6 +64,8 @@ export namespace CommonType {
   export type PublishRefreshToken = PublishRefreshTokenT;
   export type FormErrors<T> = FormErrorsT<T>;
   export type RoutePathObject = RoutePathObjectI;
+  export type ExRouteObject = ExRouteObjectT;
+  export type ExIndexRouteObject = ExIndexRouteObjectT;
 
   export enum ResStatus {
     SUCCESS = 'SUCCESS',

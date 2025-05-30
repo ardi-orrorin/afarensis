@@ -4,7 +4,7 @@ import React from 'react';
 type ModalParamsT = {
   children: React.ReactNode;
   isOpen: boolean;
-  onClose?: (id: string) => void;
+  title: string;
 }
 
 type ModalPropsT = ModalParamsT & {

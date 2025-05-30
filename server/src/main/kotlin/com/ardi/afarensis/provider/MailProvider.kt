@@ -4,10 +4,11 @@ import com.ardi.afarensis.cache.CacheJavaMailSender
 import com.ardi.afarensis.cache.CacheSystemSetting
 import com.ardi.afarensis.dto.SystemSettingKey
 import com.ardi.afarensis.dto.request.RequestSystemSetting
+import jakarta.mail.Message
 import jakarta.mail.MessagingException
+import jakarta.mail.internet.InternetAddress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.springframework.mail.SimpleMailMessage
 import org.springframework.mail.javamail.JavaMailSenderImpl
 import org.springframework.stereotype.Component
 
@@ -25,13 +26,18 @@ class MailProvider(
         mailSender.port = req.port.toInt()
         mailSender.username = req.username
         mailSender.password = req.password
+        mailSender.defaultEncoding = "UTF-8"
+        mailSender.protocol = "smtp"
 
-        val props = mailSender.javaMailProperties
-        props["mail.transport.protocol"] = "smtp"
-        props["mail.smtp.auth"] = "true"
-        props["mail.smtp.starttls.enable"] = "true"
-        props["mail.smtp.timeout"] = "5000"
-        props["mail.smtp.connectiontimeout"] = "5000"
+
+        mailSender.javaMailProperties["mail.smtp.auth"] = "true"
+        mailSender.javaMailProperties["mail.smtp.starttls.enable"] = "true"
+        mailSender.javaMailProperties["mail.debug"] = "true"
+        mailSender.javaMailProperties["mail.smtp.ssl.trust"] = "*"
+        mailSender.javaMailProperties["mail.smtp.connectiontimeout"] = "5000"
+        mailSender.javaMailProperties["mail.smtp.timeout"] = "5000"
+        mailSender.javaMailProperties["mail.smtp.writetimeout"] = "5000"
+
 
         try {
             mailSender.testConnection()
@@ -52,14 +58,22 @@ class MailProvider(
         val smtp = cacheSystemSetting.getSystemSetting()[SystemSettingKey.SMTP]
             ?: throw IllegalArgumentException("SMTP not configured")
 
+        val username = smtp.value["username"] as String
+        val host = smtp.value["host"] as String
+
+        val domain = host.split(".").takeLast(2).joinToString(".")
+
+        val from = "$username@$domain"
+
         if (!(smtp.value["enabled"] as Boolean)) return@withContext
 
-        val message = SimpleMailMessage().apply {
-            setTo(to)
-            setSubject(subject)
-            setText(text)
-            setFrom(smtp.value["host"] as String)
-        }
+        val message = javaMailSender.javaMailSender().createMimeMessage()
+        message.setSubject(subject)
+        message.setText(text)
+        message.setFrom(from)
+        message.addRecipient(
+            Message.RecipientType.TO, InternetAddress(to)
+        )
 
         javaMailSender.javaMailSender().send(message)
 
