@@ -3,6 +3,7 @@ package com.ardi.afarensis.service
 import com.ardi.afarensis.dto.ResStatus
 import com.ardi.afarensis.dto.Role
 import com.ardi.afarensis.dto.SystemSettingKey
+import com.ardi.afarensis.dto.UserDto
 import com.ardi.afarensis.dto.request.RequestUser
 import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseUser
@@ -11,8 +12,7 @@ import com.ardi.afarensis.exception.UnauthorizedException
 import com.ardi.afarensis.provider.MailProvider
 import com.ardi.afarensis.provider.TokenProvider
 import com.ardi.afarensis.util.StringUtil
-import kotlinx.coroutines.*
-import kotlinx.coroutines.reactor.mono
+import kotlinx.coroutines.runBlocking
 import org.springframework.data.domain.Sort
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService
 import org.springframework.security.core.userdetails.UserDetails
@@ -29,59 +29,59 @@ class UserService(
     private val bCryptPasswordEncoder: BCryptPasswordEncoder,
     private val tokenProvider: TokenProvider,
     private val stringUtil: StringUtil,
-    private val systemSettingService: SystemSettingService,
     private val mailProvider: MailProvider,
 ) : ReactiveUserDetailsService, BasicService() {
 
-    override fun findByUsername(username: String?): Mono<UserDetails> = mono {
+    override fun findByUsername(username: String?): Mono<UserDetails> {
         val user = userRepository.findByUserId(username!!)
             ?: throw IllegalArgumentException("User not found")
 
-        user.toUserDetailDto()
+        return Mono.just(user.toUserDetailDto())
     }
 
-    suspend fun findByUserId(userId: String) = withContext(Dispatchers.IO) {
-        userRepository.findByUserId(userId)?.toDto()
+    fun findByUserId(userId: String): UserDto {
+        return userRepository.findByUserId(userId)?.toDto()
             ?: throw IllegalArgumentException("User not found")
     }
 
-    suspend fun existByUserId(userId: String) = withContext(Dispatchers.IO) {
-        val isExist = userRepository.existsByUserId(userId)
-
-        ResponseStatus(
-            status = ResStatus.SUCCESS,
-            message = if (isExist) "계정이 존재 합니다" else "사용가능한 아이디 입니다.",
-            !isExist
-        )
+    fun existByUserId(userId: String): ResponseStatus<Boolean> {
+        return userRepository.existsByUserId(userId)
+            .let {
+                ResponseStatus(
+                    status = ResStatus.SUCCESS,
+                    message = if (it) "계정이 존재 합니다" else "사용가능한 아이디 입니다.",
+                    !it
+                )
+            }
     }
 
 
     @Transactional(readOnly = true)
-    suspend fun findAll() = supervisorScope {
+    fun findAll(): List<UserDto> {
         val users = userRepository.findAll(Sort.by(Sort.Direction.ASC, "userId"))
 
         if (users.isEmpty()) {
-            return@supervisorScope listOf()
+            return listOf()
         }
 
-        users.map { it.toDto() }
+        return users.map { it.toDto() }
     }
 
-    suspend fun save(req: RequestUser.SignUp) = withContext(Dispatchers.IO) {
+    fun save(req: RequestUser.SignUp): UserDto {
         if (userRepository.existsByUserId(req.userId)) {
             throw IllegalArgumentException("User already exists")
         }
 
-        req.toEntity().let {
+        return req.toEntity().let {
             it.pwd = bCryptPasswordEncoder.encode(it.pwd)
             it.addRole(Role.USER)
             userRepository.save(it)
         }.toDto()
     }
 
-    @Transactional
-    suspend fun signIn(req: RequestUser.SignIn, ip: String, userAgent: String) = withContext(Dispatchers.IO) {
-        val user = userRepository.findByUserId(req.userId) ?: throw RuntimeException("User not found")
+    fun signIn(req: RequestUser.SignIn, ip: String, userAgent: String): ResponseUser.SignIn {
+        val user = userRepository.findByUserId(req.userId)
+            ?: throw RuntimeException("User not found")
 
         val userDto = user.toDto();
 
@@ -89,40 +89,41 @@ class UserService(
             throw IllegalArgumentException("Password not matched")
         }
 
-        if (userDto.userRefreshToken != null) {
-            user.removeRefreshToken()
-            userRepository.save(user)
+        user.let {
+            if (userDto.userRefreshToken != null) {
+                it.removeRefreshToken()
+                userRepository.save(it)
+            }
         }
 
-        val accessToken = async {
-            tokenProvider.generateToken(userDto.userId, false)
+        val accessToken = tokenProvider.generateToken(userDto.userId, false)
+
+        val refreshToken = tokenProvider.generateToken(userDto.userId, true)
+
+
+        user.let {
+            it.addRefreshToken(
+                refreshToken,
+                ip,
+                userAgent,
+                Instant.now().plus(tokenProvider.REFRESH_EXP, ChronoUnit.SECONDS)
+            )
+
+            userRepository.save(it)
         }
 
-        val refreshToken = async {
-            tokenProvider.generateToken(userDto.userId, true)
-        }
-
-        user.addRefreshToken(
-            refreshToken.await(),
-            ip,
-            userAgent,
-            Instant.now().plus(tokenProvider.REFRESH_EXP, ChronoUnit.SECONDS)
-        )
-
-        userRepository.save(user)
-
-        ResponseUser.SignIn(
-            accessToken.await(),
+        return ResponseUser.SignIn(
+            accessToken,
             tokenProvider.ACCESS_EXP,
-            refreshToken.await(),
+            refreshToken,
             tokenProvider.REFRESH_EXP,
             userDto.userId,
             userDto.roles.toSet(),
         )
     }
 
-    @Transactional
-    suspend fun publishAccessToken(req: RequestUser.RefreshToken) = withContext(Dispatchers.IO) {
+
+    fun publishAccessToken(req: RequestUser.RefreshToken): ResponseUser.SignIn {
         val user = userRepository.findByUserId(req.userId)
             ?: throw UnauthorizedException("User not found")
 
@@ -147,7 +148,7 @@ class UserService(
 
         val accessToken = tokenProvider.generateToken(user.userId, false)
 
-        ResponseUser.SignIn(
+        return ResponseUser.SignIn(
             accessToken,
             tokenProvider.ACCESS_EXP,
             "",
@@ -157,23 +158,22 @@ class UserService(
         )
     }
 
-    @Transactional
-    suspend fun signOut(userId: String) = withContext(Dispatchers.IO) {
-        val user = userRepository.findByUserId(userId)
-            ?: throw IllegalArgumentException("User not found")
+    fun signOut(userId: String): ResponseStatus<Boolean> {
+        return userRepository.findByUserId(userId)
+            ?.let {
+                it.removeRefreshToken()
+                userRepository.save(it)
 
-        user.removeRefreshToken()
-        userRepository.save(user)
-
-        ResponseStatus(
-            ResStatus.SUCCESS,
-            "Sign out success",
-            true,
-        )
+                ResponseStatus(
+                    ResStatus.SUCCESS,
+                    "Sign out success",
+                    true,
+                )
+            } ?: throw IllegalArgumentException("User not found")
     }
 
-    @Transactional
-    suspend fun resetPassword(req: RequestUser.ResetPassword) = withContext(Dispatchers.IO) {
+
+    fun resetPassword(req: RequestUser.ResetPassword): ResponseStatus<Boolean> {
         val user = userRepository.findByUserId(req.userId)
             ?: throw IllegalArgumentException("User not found")
 
@@ -185,33 +185,25 @@ class UserService(
 
         user.pwd = bCryptPasswordEncoder.encode(newPwd)
 
-        val addCoded = async {
-            userRepository.save(user)
-        }
+        runBlocking { mailProvider.sendMail(req.email, "Reset Password", "Your new password is $newPwd") }
 
-        val sentEmail = async {
-            mailProvider.sendMail(req.email, "Reset Password", "Your new password is $newPwd")
-        }
+        userRepository.save(user)
 
-        addCoded.await()
-        sentEmail.await()
-
-        ResponseStatus(
+        return ResponseStatus(
             ResStatus.SUCCESS,
             "Password reset success",
             true,
         )
     }
 
-    @Transactional
-    fun updateMaster(req: RequestUser.InitMasterUpdate, role: Role) = runBlocking {
+    fun updateMaster(req: RequestUser.InitMasterUpdate, role: Role): ResponseStatus<Boolean> {
         val sysInit = getCacheSystemSettingKey(SystemSettingKey.INIT)
         val sysInitValue = sysInit?.value ?: throw RuntimeException("System not Init value")
         val initialized = sysInitValue["initialized"] as Boolean
         val isUpdatedMasterPwd = sysInitValue["isUpdatedMasterPwd"] as Boolean
         val confirmRoles = listOf(Role.GUEST, Role.USER, Role.ADMIN)
         if (confirmRoles.contains(role) && (initialized || isUpdatedMasterPwd)) {
-            return@runBlocking ResponseStatus(
+            return ResponseStatus(
                 ResStatus.FAILED,
                 "Master password already updated",
                 false,
@@ -223,19 +215,19 @@ class UserService(
         master.pwd = bCryptPasswordEncoder.encode(req.pwd)
         master.email = req.email
 
+        userRepository.save(master)
 
-        systemSettingService.updateInit()
-
-        ResponseStatus(
+        return ResponseStatus(
             ResStatus.SUCCESS,
             "Master password updated",
             true,
         )
     }
 
+    fun updatePassword(id: String, req: RequestUser.UpdatePassword): ResponseStatus<Boolean> {
+        val user = userRepository.findById(id)
+            .orElseThrow { IllegalArgumentException("User not found") }
 
-    suspend fun updatePassword(id: Long, req: RequestUser.UpdatePassword) = withContext(Dispatchers.IO) {
-        val user = userRepository.findById(id).orElseThrow { IllegalArgumentException("User not found") }
         val userDto = user.toDto()
 
         if (!bCryptPasswordEncoder.matches(req.pwd, userDto.pwd)) {
@@ -246,7 +238,7 @@ class UserService(
 
         userRepository.save(user)
 
-        ResponseStatus(
+        return ResponseStatus(
             ResStatus.SUCCESS,
             "Password updated",
             true,

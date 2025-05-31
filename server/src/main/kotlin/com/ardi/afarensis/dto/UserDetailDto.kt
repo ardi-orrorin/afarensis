@@ -4,7 +4,7 @@ import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 
 data class UserDetailDto(
-    val id: Long,
+    val id: String,
     val userId: String,
     val pwd: String,
     val roles: MutableSet<Role> = mutableSetOf(),

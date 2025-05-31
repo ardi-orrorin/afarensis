@@ -3,9 +3,11 @@ package com.ardi.afarensis.controller
 import com.ardi.afarensis.dto.ResStatus
 import com.ardi.afarensis.dto.Role
 import com.ardi.afarensis.dto.UserDetailDto
+import com.ardi.afarensis.dto.UserDto
 import com.ardi.afarensis.dto.request.RequestUser
 import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.exception.UnauthorizedException
+import com.ardi.afarensis.service.SystemSettingService
 import jakarta.validation.Valid
 import kotlinx.coroutines.*
 import org.springframework.http.ResponseEntity
@@ -17,46 +19,47 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/v1/public/users")
 class PublicUserController(
-
+    private val systemSettingService: SystemSettingService
 ) : BasicController() {
 
     @GetMapping("exist-id/{userId}")
     suspend fun existUserId(
         @PathVariable userId: String
-    ) = supervisorScope {
-        userService.existByUserId(userId)
+    ): ResponseStatus<Boolean> {
+        return userService.existByUserId(userId)
     }
 
     @PostMapping("signup")
     suspend fun singUp(
         @Valid @RequestBody req: RequestUser.SignUp
-    ) = supervisorScope {
-        userService.save(req)
+    ): UserDto {
+        return userService.save(req)
     }
-
 
     @PostMapping("signin")
     suspend fun signIn(
         @Valid @RequestBody req: RequestUser.SignIn,
         request: ServerHttpRequest,
         response: ServerHttpResponse
-    ) = supervisorScope {
+    ): ResponseEntity<ResponseStatus<Boolean>> {
         val (ip, userAgent) = getIpAndUserAgent(request)
 
-        val signInfo = userService.signIn(req, ip, userAgent)
+        val signInfo = userService.signIn(req, ip, userAgent);
 
-        listOf(
-            ResponseCookieEntity("access_token", signInfo.accessToken, signInfo.accessTokenExpiresIn, false),
-            ResponseCookieEntity("refresh_token", signInfo.refreshToken, signInfo.refreshTokenExpiresIn),
-            ResponseCookieEntity("user_id", signInfo.userId, signInfo.refreshTokenExpiresIn, false),
-            ResponseCookieEntity("roles", signInfo.roles.joinToString(":"), signInfo.accessTokenExpiresIn, false)
-        ).map {
-            async {
-                withContext(Dispatchers.Default) {
-                    response.addCookie(createResponseCookie(it))
+        withContext(Dispatchers.Default) {
+            listOf(
+                ResponseCookieEntity("access_token", signInfo.accessToken, signInfo.accessTokenExpiresIn, false),
+                ResponseCookieEntity("refresh_token", signInfo.refreshToken, signInfo.refreshTokenExpiresIn),
+                ResponseCookieEntity("user_id", signInfo.userId, signInfo.refreshTokenExpiresIn, false),
+                ResponseCookieEntity("roles", signInfo.roles.joinToString(":"), signInfo.accessTokenExpiresIn, false)
+            ).map {
+                async {
+                    withContext(Dispatchers.Default) {
+                        response.addCookie(createResponseCookie(it))
+                    }
                 }
-            }
-        }.awaitAll()
+            }.awaitAll()
+        }
 
         val res = ResponseStatus(
             status = ResStatus.SUCCESS,
@@ -64,14 +67,14 @@ class PublicUserController(
             data = true
         )
 
-        ResponseEntity.ok(res)
+        return ResponseEntity.ok(res)
     }
 
     @PostMapping("reset-password")
     suspend fun resetPassword(
         @Valid @RequestBody req: RequestUser.ResetPassword
-    ) = supervisorScope {
-        userService.resetPassword(req)
+    ): ResponseStatus<Boolean> {
+        return userService.resetPassword(req)
     }
 
     @GetMapping("refresh")
@@ -123,21 +126,35 @@ class PublicUserController(
     @PatchMapping("master")
     suspend fun updateMaster(
         @Valid @RequestBody req: RequestUser.InitMasterUpdate
-    ) = supervisorScope {
-        userService.updateMaster(req, Role.GUEST)
+    ): ResponseStatus<Boolean> {
+        val res = userService.updateMaster(req, Role.GUEST)
+
+        if (res.data!!) {
+            withContext(Dispatchers.IO) {
+                systemSettingService.updateInit()
+            }
+        }
+
+        return res;
     }
 
     @DeleteMapping("signout")
     suspend fun signOut(
         @AuthenticationPrincipal principal: UserDetailDto?,
         response: ServerHttpResponse
-    ) = supervisorScope {
+    ): ResponseEntity<ResponseStatus<Boolean>> {
         removeCookie(response)
 
         if (principal != null) {
             userService.signOut(principal.userId)
         }
 
-        ResponseEntity.ok(ResponseStatus(status = ResStatus.SUCCESS, message = "successfully sign out", data = true))
+        return ResponseEntity.ok(
+            ResponseStatus(
+                status = ResStatus.SUCCESS,
+                message = "successfully sign out",
+                data = true
+            )
+        )
     }
 }

@@ -10,4 +10,8 @@ class PageResponse<T>(
     val hasNext: Boolean,
     val hasPrevious: Boolean,
     val data: List<T>,
-)
+) {
+    override fun toString(): String {
+        return "PageResponse(page=$page, size=$size, total=$total, totalPages=$totalPages, isFirst=$isFirst, isLast=$isLast, hasNext=$hasNext, hasPrevious=$hasPrevious, data=$data)"
+    }
+}

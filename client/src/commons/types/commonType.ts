@@ -1,4 +1,4 @@
-import { QueryState } from '@tanstack/react-query';
+import { QueryState, UseQueryOptions } from '@tanstack/react-query';
 import { IndexRouteObject, RouteObject } from 'react-router-dom';
 
 type CreateQueryActionsT<T> = {
@@ -13,6 +13,7 @@ type CreateQueryActionsT<T> = {
 
 type GetQueryT<T> = CreateQueryActionsT<T> & {
   queryKey: string[];
+  queryOp: Omit<UseQueryOptions<T, Error, T, string[]>, 'queryFn'>;
 };
 
 type HistoryPageT = {
@@ -28,6 +29,18 @@ type ResponseStatusT<T> = {
   message: string;
   data: T;
 };
+
+type PageResponseT<T> = {
+  page: number;
+  size: number;
+  total: number;
+  totalPage: number;
+  isFirst: boolean;
+  isLast: boolean;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  data: T[];
+}
 
 type PublishRefreshTokenT = {
   refreshToken: string;
@@ -66,6 +79,7 @@ export namespace CommonType {
   export type RoutePathObject = RoutePathObjectI;
   export type ExRouteObject = ExRouteObjectT;
   export type ExIndexRouteObject = ExIndexRouteObjectT;
+  export type PageResponse<T> = PageResponseT<T>;
 
   export enum ResStatus {
     SUCCESS = 'SUCCESS',

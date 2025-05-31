@@ -16,6 +16,6 @@ data class RequestPage(
         PageRequest.of(
             this.page.toZeroBasedPage(),
             this.size,
-            Sort.by(this.sortBy, this.sortDirection)
+            Sort.by(Sort.Direction.fromString(this.sortDirection), this.sortBy)
         )
 }

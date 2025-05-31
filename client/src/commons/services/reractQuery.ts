@@ -16,18 +16,21 @@ function isAxiosResponse<T>(obj: any): obj is AxiosResponse<T> {
 
 const queryClient = new QueryClient();
 
-const createQueryActions = <T = any>({
-  queryKey,
-  queryOp,
-}: {
+const createQueryActions = <T = any>
+({
+   queryKey,
+   queryOp,
+ }: {
   queryKey: string[];
   queryOp: Omit<UseQueryOptions<T, Error, T, string[]>, 'queryFn'>;
 }): CommonType.CreateQueryActions<T> => {
-  const prefetch = () => queryClient.prefetchQuery(queryOp);
+
 
   const data = queryClient.getQueryData(queryKey) as T;
 
-  const refetch = () => queryClient.refetchQueries({ queryKey });
+  const prefetch = () => queryClient.prefetchQuery(queryOp);
+
+  const refetch = async () => queryClient.refetchQueries({ queryKey });
 
   const state = queryClient.getQueryState(queryKey);
 
@@ -40,13 +43,14 @@ const createQueryActions = <T = any>({
   return { prefetch, data, refetch, state, isPending, isFailed, isSuccess };
 };
 
-const baseFetchQueryFn = <R = any, A = any, D = any>({
-  queryKey,
-  fetchApi,
-  initialData,
-  addQueryKey,
-  fetchArgs,
-}: {
+const baseFetchQueryFn = <R = any, A = any, D = any>
+({
+   queryKey,
+   fetchApi,
+   initialData,
+   addQueryKey,
+   fetchArgs,
+ }: {
   queryKey: string[];
   fetchApi: (args: A) => Promise<AxiosResponse<R, D>> | Promise<R>;
   fetchArgs?: A;
@@ -104,7 +108,7 @@ const baseFetchQueryFn = <R = any, A = any, D = any>({
 
   const actions = reactQuery.createQueryActions<R>({ queryKey, queryOp });
 
-  return { queryKey, ...actions } as CommonType.GetQuery<R>;
+  return { queryKey, ...actions, queryOp } as CommonType.GetQuery<R>;
 };
 
 const reactQuery = {

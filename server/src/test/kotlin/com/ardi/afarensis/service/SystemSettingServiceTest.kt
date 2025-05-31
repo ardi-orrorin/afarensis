@@ -29,7 +29,7 @@ class SystemSettingServiceTest {
     fun findByKey() = runTest {
         val result = systemSettingService.findByKey(SystemSettingKey.INIT)
             ?: throw Exception("SystemSettingService.findByKey() failed")
-        log.info(result.toDto().toString())
+        log.info(result.toString())
 
         log.info(result.value["isUpdatedMasterPwd"].toString())
     }

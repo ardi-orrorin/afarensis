@@ -1,6 +1,6 @@
 CREATE TABLE users
 (
-    id          BIGSERIAL PRIMARY KEY,
+    id          CHAR(26) PRIMARY KEY,
     user_id     VARCHAR(255) UNIQUE NOT NULL,
     pwd         VARCHAR(255)        NOT NULL,
     email       VARCHAR(255) UNIQUE NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE users
 
 CREATE TABLE users_details
 (
-    users_pk   BIGINT,
+    users_pk   CHAR(26),
     name       VARCHAR(500),
     birth_day  DATE,
     gender     VARCHAR(10),
@@ -24,14 +24,14 @@ CREATE TABLE users_details
 CREATE TABLE users_roles
 (
     id       BIGSERIAL PRIMARY KEY,
-    users_pk BIGINT,
+    users_pk CHAR(26),
     role     VARCHAR(50)
 );
 
 CREATE TABLE users_refresh_token
 (
     id            BIGSERIAL PRIMARY KEY,
-    users_pk      BIGINT,
+    users_pk      CHAR(26),
     refresh_token VARCHAR(500),
     ip            VARCHAR(50),
     user_agent    VARCHAR(500),
@@ -41,7 +41,7 @@ CREATE TABLE users_refresh_token
 CREATE TABLE users_verify_email
 (
     id         BIGSERIAL PRIMARY KEY,
-    users_pk   BIGINT,
+    users_pk   CHAR(26),
     verify_key VARCHAR(500),
     available  BOOLEAN DEFAULT TRUE,
     expired_at TIMESTAMP NOT NULL
@@ -65,6 +65,27 @@ CREATE TABLE system_logs
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE users_webhooks
+(
+    id         BIGSERIAL PRIMARY KEY,
+    users_pk   CHAR(26),
+    type       VARCHAR(50),
+    url        VARCHAR(500),
+    secret     VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_deleted BOOLEAN   DEFAULT FALSE,
+    deleted_at TIMESTAMP DEFAULT NULL
+);
+
+CREATE TABLE users_webhooks_message_logs
+(
+    id                BIGSERIAL PRIMARY KEY,
+    users_pk          CHAR(26),
+    users_webhooks_pk BIGINT,
+    message           JSONB,
+    created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- CREATE FOREIGN KEY
 ALTER TABLE users_details
     ADD CONSTRAINT fk_users_details_users
@@ -83,6 +104,18 @@ ALTER TABLE users_verify_email
     ADD CONSTRAINT fk_users_verify_email_users
         FOREIGN KEY ( users_pk ) REFERENCES users ( id );
 
+ALTER TABLE users_webhooks
+    ADD CONSTRAINT fk_users_webhooks_users
+        FOREIGN KEY ( users_pk ) REFERENCES users ( id );
+
+ALTER TABLE users_webhooks_message_logs
+    ADD CONSTRAINT fk_users_webhooks_message_logs_users
+        FOREIGN KEY ( users_pk ) REFERENCES users ( id );
+
+ALTER TABLE users_webhooks_message_logs
+    ADD CONSTRAINT fk_users_webhooks_message_logs_users_webhooks
+        FOREIGN KEY ( users_webhooks_pk ) REFERENCES users_webhooks ( id );
+
 -- CREATE UNIQUE
 ALTER TABLE users_roles
     ADD UNIQUE ( users_pk, role );
@@ -96,12 +129,12 @@ ALTER TABLE system_settings
 
 -- INSERT DEFAULT DATA
 INSERT INTO users (id, user_id, pwd, email, profile_img, created_at, deleted_at, is_deleted)
-VALUES (0, 'master', '', '', '', NOW(), NULL, FALSE);
+VALUES ('00000000000000000000000000', 'master', '', '', '', NOW(), NULL, FALSE);
 
 INSERT INTO users_roles (users_pk, role)
-VALUES (0, 'MASTER'),
-       (0, 'ADMIN'),
-       (0, 'USER');
+VALUES ('00000000000000000000000000', 'MASTER'),
+       ('00000000000000000000000000', 'ADMIN'),
+       ('00000000000000000000000000', 'USER');
 
 
 INSERT INTO system_settings (key, value, init_value, public)

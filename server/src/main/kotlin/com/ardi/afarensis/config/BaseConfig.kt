@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 
 @Configuration
 @EnableCaching
@@ -15,5 +17,9 @@ class BaseConfig {
     fun passwordEncoder(): BCryptPasswordEncoder {
         return BCryptPasswordEncoder()
     }
-    
+
+    @Bean
+    fun transactionTemplate(transactionManager: PlatformTransactionManager) =
+        TransactionTemplate(transactionManager)
+
 }

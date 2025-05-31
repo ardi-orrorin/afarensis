@@ -2,6 +2,7 @@ import Layout from './layout';
 import Index from '.';
 import PasswordRouter from './password/router';
 import { CommonType } from '../../commons/types/commonType';
+import WebhookRouter from './webhook/router';
 import ExRouteObject = CommonType.ExRouteObject;
 
 const UserRouter: ExRouteObject = {
@@ -17,6 +18,7 @@ const UserRouter: ExRouteObject = {
       Component: Index,
     },
     PasswordRouter,
+    WebhookRouter,
   ],
 };
 

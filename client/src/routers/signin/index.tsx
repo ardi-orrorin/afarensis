@@ -10,6 +10,9 @@ import signInSchema from './[features]/types/signInSchema';
 import commonFunc from '../../commons/services/funcs';
 import { useModal } from '../../commons/hooks/useModal';
 import FindPassword from './[features]/components/findPassword';
+import systemSettingQuery from '../master/system-setting/[features]/stores/query';
+import { SystemSetting } from '../master/system-setting/[features]/types/systemSetting';
+import PublicKey = SystemSetting.PublicKey;
 
 
 const Index = () => {
@@ -21,6 +24,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { setToken } = useSignInToken();
   const { addModal } = useModal();
+  const { value: signUp } = systemSettingQuery.publicQuery().data[PublicKey.SIGN_UP];
 
 
   const isValid = useMemo(() => {
@@ -46,7 +50,7 @@ const Index = () => {
     try {
       const data = await signInService.postSignIn(login);
       setToken(data);
-      
+
       navigate('/');
 
     } catch (e) {
@@ -122,13 +126,18 @@ const Index = () => {
           >
             Reset
           </button>
-          <Link to={'/signup'}> Sign Up </Link>
-          <button onClick={findPasswordHandler}
-                  disabled={loading}
-                  className={styles['find-password']}
-          >
-            Find Password
-          </button>
+          {
+            signUp.enabled
+            && <>
+              <Link to={'/signup'}> Sign Up </Link>
+              <button onClick={findPasswordHandler}
+                      disabled={loading}
+                      className={styles['find-password']}
+              >
+                Find Password
+              </button>
+            </>
+          }
         </div>
       </div>
     </div>

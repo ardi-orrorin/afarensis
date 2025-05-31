@@ -1,0 +1,68 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.container > div:first-child {
+    display: flex;
+    gap: 10px;
+}
+
+
+.container > div:first-child > *:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    color: #666;
+}
+
+.container > div:first-child > select {
+    padding: 0.4rem;
+    background-color: #00bbff;
+    color: #fff;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer
+}
+
+.container > div:first-child > input {
+    width: 300px;
+    padding: 0.4rem;
+}
+
+.container > div:first-child > button {
+    padding: 0.4rem;
+    background-color: #00bbff;
+    color: #fff;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.error-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: red;
+    font-size: 0.9rem;
+}
+
+.error-container > p {
+    margin: 0;
+}
+
+.response-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: green;
+    font-size: 0.9rem;
+}
+
+.response-container > p {
+    margin: 0;
+}
+
+.response-container > .error {
+    color: red !important;
+}

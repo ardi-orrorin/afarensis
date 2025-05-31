@@ -19,3 +19,4 @@ fun <T> Page<*>.toResponse(data: List<T>): PageResponse<T> {
         hasPrevious = this.hasPrevious()
     )
 }
+

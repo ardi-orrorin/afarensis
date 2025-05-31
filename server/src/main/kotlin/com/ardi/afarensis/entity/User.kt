@@ -2,6 +2,7 @@ package com.ardi.afarensis.entity
 
 import com.ardi.afarensis.dto.UserDetailDto
 import com.ardi.afarensis.dto.UserDto
+import com.github.f4b6a3.ulid.UlidCreator
 import jakarta.persistence.*
 import org.hibernate.annotations.DialectOverride.SQLDelete
 import org.hibernate.annotations.SQLRestriction
@@ -18,8 +19,8 @@ import java.time.Instant
 @SQLRestriction("deleted_at IS NULL AND is_deleted = FALSE")
 class User(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,
+    @Column(length = 26)
+    var id: String? = null,
     var userId: String = "",
     var pwd: String = "",
     var email: String = "",
@@ -28,18 +29,32 @@ class User(
     var deletedAt: Instant? = null,
 
     var isDeleted: Boolean = false,
-    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var userRoles: MutableSet<UserRole> = mutableSetOf(),
 
-    @OneToOne(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToOne(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var userRefreshToken: UserRefreshToken? = null,
 
-    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     @SQLRestriction("available = true")
     var userVerifyEmails: MutableList<UserVerifyEmail> = mutableListOf(),
+
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var webhooks: MutableList<UserWebhook> = mutableListOf(),
+
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var webhookMessageLogs: MutableList<UserWebhookMessageLog> = mutableListOf(),
 ) {
+    @PrePersist
+    fun generateId() {
+        if (id == null) {
+            id = UlidCreator.getUlid().toString()
+        }
+    }
+
+
     fun toUserDetailDto() = UserDetailDto(
-        id = id ?: 0,
+        id = id ?: "",
         pwd = pwd,
         userId = userId,
         profileImg = profileImg,
@@ -47,14 +62,16 @@ class User(
     )
 
     fun toDto() = UserDto(
-        id = id ?: 0,
+        id = id ?: "",
         pwd = pwd,
         userId = userId,
         email = email,
         profileImg = profileImg,
         roles = userRoles.map { it.role }.toMutableSet(),
         createdAt = createdAt ?: Instant.now(),
-        userRefreshToken = userRefreshToken
+        userRefreshToken = userRefreshToken,
+        webhooks = webhooks.map { it.toDto() }.toMutableSet(),
+        webhookMessageLogs = webhookMessageLogs.map { it.toDto() }.toMutableList(),
     )
 
     fun addRole(roleType: com.ardi.afarensis.dto.Role) {
@@ -79,6 +96,17 @@ class User(
 
     fun removeRefreshToken() {
         userRefreshToken = null
+    }
+
+    fun addWebhook(webhook: UserWebhook) {
+        webhooks.add(webhook)
+        webhook.user = this
+    }
+
+    fun removeWebhook(id: Long) {
+        val webhook = webhooks.find { it.id == id } ?: throw IllegalArgumentException("Webhook not found")
+        webhooks.remove(webhook)
+        webhook.user = null
     }
 
 }
