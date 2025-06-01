@@ -10,6 +10,7 @@ const ExampleRouter: ExRouteObject = {
   id: 'root/exmaple',
   path: 'example',
   name: 'Example',
+  requiredRoles: [],
   Component: Layout,
   unstable_middleware: [authMiddleware],
   shouldRevalidate: () => false,

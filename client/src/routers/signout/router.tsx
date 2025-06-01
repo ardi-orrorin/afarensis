@@ -7,6 +7,7 @@ const SignOutRouter: ExRouteObject = {
   id: 'root/signout',
   path: 'signout',
   name: 'Sign Out',
+  requiredRoles: ['USER'],
   loader: async () => {
     await signOutService.deleteSignOut();
     return redirect('/');

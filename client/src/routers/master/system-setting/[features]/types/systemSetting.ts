@@ -5,13 +5,13 @@ import systemSettingSchema from './systemSettingSchema';
 interface PublicSystemSettingI {
   [SystemSetting.PublicKey.SIGN_UP]: SystemSettingValueI<SystemSetting.PublicKey.SIGN_UP>;
   [SystemSetting.PublicKey.INIT]: SystemSettingValueI<SystemSetting.PublicKey.INIT>;
+  [SystemSetting.PublicKey.WEBHOOK]: SystemSettingValueI<SystemSetting.PublicKey.WEBHOOK>;
 
   [key: string]: SystemSettingValueI<SystemSetting.PublicKey>;
 }
 
 interface PrivateSystemSettingI {
   [SystemSetting.PrivateKey.SMTP]: SystemSettingValueI<SystemSetting.PrivateKey.SMTP>;
-  [SystemSetting.PrivateKey.WEBHOOK]: SystemSettingValueI<SystemSetting.PrivateKey.WEBHOOK>;
 
   [key: string]: SystemSettingValueI<SystemSetting.PrivateKey>;
 }
@@ -26,9 +26,9 @@ interface SystemSettingValueI<T extends SystemSetting.PrivateKey | SystemSetting
 interface ValueI {
   [SystemSetting.PublicKey.SIGN_UP]: SystemSetting.SignUp;
   [SystemSetting.PublicKey.INIT]: SystemSetting.Init;
+  [SystemSetting.PublicKey.WEBHOOK]: SystemSetting.Webhook;
 
   [SystemSetting.PrivateKey.SMTP]: SystemSetting.Smtp;
-  [SystemSetting.PrivateKey.WEBHOOK]: SystemSetting.Webhook;
 
   [key: string]: InitT | SignUpT | SmtpT | WebhookT;
 }
@@ -70,11 +70,11 @@ export namespace SystemSetting {
   export enum PublicKey {
     SIGN_UP = 'SIGN_UP',
     INIT = 'INIT',
+    WEBHOOK = 'WEBHOOK',
   }
 
   export enum PrivateKey {
     SMTP = 'SMTP',
-    WEBHOOK = 'WEBHOOK',
   }
 
   export enum Coverage {

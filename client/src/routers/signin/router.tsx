@@ -7,6 +7,7 @@ const SignInRouter: ExRouteObject = {
   id: 'root/signin',
   path: 'signin',
   name: 'Sign In',
+  requiredRoles: [],
   Component: Layout,
   children: [
     {

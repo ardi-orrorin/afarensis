@@ -15,23 +15,20 @@ interface NavigationItemProps {
   cookies: {
     access_token?: string;
     refresh_token?: string;
-    roles?: string[];
+    roles?: string;
     user_id?: string;
   };
 }
-
-const ROLE_RESTRICTED_ROUTES = {
-  master: 'MASTER',
-  admin: 'ADMIN',
-  user: 'USER',
-} as const;
 
 const AUTH_ROUTES = ['signin', 'signup'] as const;
 
 const LeftNavigator = () => {
   const [cookies] = useCookies(['access_token', 'roles', 'user_id']);
-  const linkObj = [{ path: '/', name: 'Home' }, ...commonFunc.getAllRoutePaths(rootRouter)] as RoutePathObject[];
-
+  const linkObj = [{
+    path: '/',
+    name: 'Home',
+    requiredRoles: [],
+  }, ...commonFunc.getAllRoutePaths(rootRouter)] as RoutePathObject[];
   return (
     <nav className={styles['nav']}>
       <ul className={styles['nav-container']}>
@@ -50,9 +47,12 @@ const NavigationItem = ({ link, cookies }: NavigationItemProps) => {
 
   const isAuthenticated = Boolean(cookies.access_token ?? cookies.user_id);
 
-  const hasRequiredRole = (routeName: string): boolean => {
-    const requiredRole = ROLE_RESTRICTED_ROUTES[routeName as keyof typeof ROLE_RESTRICTED_ROUTES];
-    return !requiredRole || cookies.roles?.includes(requiredRole) || false;
+  const hasRequiredRole = (): boolean => {
+    const requiredRoles = link.requiredRoles;
+    const userRoles = cookies.roles?.split(':') ?? [];
+    const validRoles = commonFunc.validRoles({ requiredRoles, userRoles });
+
+    return requiredRoles.length === 0 || validRoles || false;
   };
 
   const shouldHideLink = (): boolean => {
@@ -60,7 +60,7 @@ const NavigationItem = ({ link, cookies }: NavigationItemProps) => {
     if (AUTH_ROUTES.includes(pathName as any) && isAuthenticated) return true;
     if (pathName === 'signout' && !isAuthenticated) return true;
     if (pathName === 'signup' && !signUp.enabled) return true;
-    if (!hasRequiredRole(pathName)) return true;
+    if (!hasRequiredRole()) return true;
     return false;
   };
 

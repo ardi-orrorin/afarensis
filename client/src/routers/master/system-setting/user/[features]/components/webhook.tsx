@@ -9,28 +9,28 @@ import Toggle from '../../../[features]/components/toggle';
 import styles from './webhook.module.css';
 import systemSettingFunc from '../../../[features]/service/func';
 import commonFunc from '../../../../../../commons/services/funcs';
-import PrivateKey = SystemSetting.PrivateKey;
+import PublicKey = SystemSetting.PublicKey;
 
 
 const Webhook = () => {
-  const { data: privateData, refetch } = systemSettingQuery.privateQuery();
-  const [value, setValue] = useState(privateData[PrivateKey.WEBHOOK].value);
+  const { data: publicData, refetch } = systemSettingQuery.publicQuery();
+  const [value, setValue] = useState(publicData[PublicKey.WEBHOOK].value);
   const [errors, setErrors] = useState({} as CommonType.FormErrors<SystemSetting.Webhook>);
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState({} as CommonType.ResponseStatus<boolean>);
 
 
   useEffect(() => {
-    if (privateData?.[PrivateKey.WEBHOOK].value) {
-      setValue(privateData[PrivateKey.WEBHOOK].value);
+    if (publicData?.[PublicKey.WEBHOOK].value) {
+      setValue(publicData[PublicKey.WEBHOOK].value);
     }
-  }, [privateData]);
+  }, [publicData]);
 
   const changeToggle = () => {
     const newValue = {
       ...value,
       enabled: !value.enabled,
-    } as SystemSetting.Value[PrivateKey.WEBHOOK];
+    } as SystemSetting.Value[PublicKey.WEBHOOK];
 
     const result = validHandler(newValue);
 
@@ -41,7 +41,7 @@ const Webhook = () => {
     setValue(newValue);
   };
 
-  const validHandler = (newValue: SystemSetting.Value[PrivateKey.WEBHOOK]) => {
+  const validHandler = (newValue: SystemSetting.Value[PublicKey.WEBHOOK]) => {
     const subtractRequired = systemSettingFunc.subtractRequiredHandler({ key: 'Webhook', newValue });
     setErrors(subtractRequired);
     setResponse({} as CommonType.ResponseStatus<boolean>);
@@ -69,13 +69,13 @@ const Webhook = () => {
 
   const saveHandle = async () => {
     setLoading(true);
-    const oldValue = privateData[PrivateKey.WEBHOOK];
+    const oldValue = publicData[PublicKey.WEBHOOK];
     const newValue = {
       ...oldValue,
       value,
     };
     try {
-      const res = await systemSettingServiceApi.post<SystemSetting.PrivateSystemSetting[PrivateKey.WEBHOOK]>(newValue);
+      const res = await systemSettingServiceApi.post(newValue);
       setResponse(res);
     } catch (e) {
       const err = e as AxiosError;
@@ -88,7 +88,7 @@ const Webhook = () => {
   const initHandle = async () => {
     setLoading(true);
     try {
-      const res = await systemSettingServiceApi.putInit(PrivateKey.WEBHOOK);
+      const res = await systemSettingServiceApi.putInit(PublicKey.WEBHOOK);
       await refetch();
       setResponse(res);
     } catch (e) {

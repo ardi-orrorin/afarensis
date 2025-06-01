@@ -1,5 +1,6 @@
 package com.ardi.afarensis.controller
 
+import com.ardi.afarensis.service.SystemSettingService
 import com.ardi.afarensis.service.UserService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -15,6 +16,9 @@ open class BasicController {
 
     @Autowired
     lateinit var userService: UserService
+
+    @Autowired
+    lateinit var cacheSystemSettingService: SystemSettingService
 
     suspend fun removeCookie(res: ServerHttpResponse) = withContext(Dispatchers.Default) {
         listOf("access_token", "refresh_token", "user_id", "roles").map {

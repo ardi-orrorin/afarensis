@@ -56,16 +56,16 @@ type FormErrorsT<T> = {
 interface RoutePathObjectI {
   path: string;
   name: string;
+  requiredRoles: (keyof typeof CommonType.Role)[];
   children?: RoutePathObjectI[];
 }
 
 type ExRouteObjectT = RouteObject & {
   name: string;
+  requiredRoles: (keyof typeof CommonType.Role)[];
 }
 
-type ExIndexRouteObjectT = IndexRouteObject & {
-  name: string;
-}
+type ExIndexRouteObjectT = IndexRouteObject & ExRouteObjectT
 
 
 export namespace CommonType {

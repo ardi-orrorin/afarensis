@@ -22,4 +22,6 @@ class BaseConfig {
     fun transactionTemplate(transactionManager: PlatformTransactionManager) =
         TransactionTemplate(transactionManager)
 
+    @Bean
+    fun restTemplate() = org.springframework.web.client.RestTemplate()
 }

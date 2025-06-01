@@ -1,7 +1,10 @@
 import { CommonType } from '../types/commonType';
 import { AxiosError, AxiosResponse } from 'axios';
 import { Dispatch } from 'react';
+import { Cookies } from 'react-cookie';
 import ResStatus = CommonType.ResStatus;
+import ExRouteObject = CommonType.ExRouteObject;
+import ExIndexRouteObject = CommonType.ExIndexRouteObject;
 
 const subtractRequiredStr =
   <T extends Object>(obj: T) =>
@@ -32,6 +35,7 @@ const getAllRoutePaths = (routes: CommonType.ExRouteObject | CommonType.ExIndexR
       return {
         path: currentPath,
         name: route.name ?? '',
+        requiredRoles: route.requiredRoles ?? [],
         ...(children.length > 0 && { children }),
       };
     });
@@ -49,11 +53,31 @@ const setResponseError = (
   });
 };
 
+const validRoles =
+  ({ requiredRoles, userRoles }: {
+    requiredRoles: (keyof typeof CommonType.Role)[],
+    userRoles: string[]
+  }) => {
+    if (requiredRoles.length === 0) return true;
+    return requiredRoles.every((role) => userRoles.includes(role));
+  };
+
+const routeValidRoles = (router: ExRouteObject | ExIndexRouteObject) => {
+  const cookie = new Cookies().get('roles') as string;
+  const roles = cookie.split(':');
+  
+  if (!validRoles({ requiredRoles: router.requiredRoles, userRoles: roles })) {
+    throw new Error('접속 권한이 없습니다.');
+  }
+};
+
 const commonFunc = {
   subtractRequiredStr,
   axiosError,
   getAllRoutePaths,
   setResponseError,
+  validRoles,
+  routeValidRoles,
 };
 
 export default commonFunc;

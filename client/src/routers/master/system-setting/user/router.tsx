@@ -1,6 +1,7 @@
 import Layout from './layout';
 import Index from '.';
 import { CommonType } from '../../../../commons/types/commonType';
+import commonFunc from '../../../../commons/services/funcs';
 import ExRouteObject = CommonType.ExRouteObject;
 
 const UserRouter: ExRouteObject = {
@@ -8,7 +9,9 @@ const UserRouter: ExRouteObject = {
   path: 'user',
   name: 'User',
   Component: Layout,
+  requiredRoles: ['USER', 'ADMIN', 'MASTER'],
   loader: async () => {
+    commonFunc.routeValidRoles(UserRouter);
   },
   children: [
     {

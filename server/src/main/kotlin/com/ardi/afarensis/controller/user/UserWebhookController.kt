@@ -1,6 +1,7 @@
 package com.ardi.afarensis.controller.user
 
 import com.ardi.afarensis.controller.BasicController
+import com.ardi.afarensis.dto.SystemSettingKey
 import com.ardi.afarensis.dto.UserDetailDto
 import com.ardi.afarensis.dto.UserWebhookMessageLogDto
 import com.ardi.afarensis.dto.request.RequestPage
@@ -23,6 +24,7 @@ class UserWebhookController(
     suspend fun findAllByUserId(
         @AuthenticationPrincipal principal: UserDetailDto
     ): ResponseWebhook.List {
+        validAuthentication(principal)
         return webhookService.findAllByUserId(principal.id)
     }
 
@@ -31,6 +33,7 @@ class UserWebhookController(
         @AuthenticationPrincipal principal: UserDetailDto,
         @Valid @RequestBody req: RequestWebhook.SaveWebhook
     ): ResponseStatus<Boolean> {
+        validAuthentication(principal)
         return webhookService.saveWebhook(principal.id, req)
     }
 
@@ -39,6 +42,7 @@ class UserWebhookController(
         @AuthenticationPrincipal principal: UserDetailDto,
         @Valid @RequestBody req: RequestWebhook.SaveWebhook
     ): ResponseStatus<Boolean> {
+        validAuthentication(principal)
         return webhookService.updateWebhook(principal.id, req)
     }
 
@@ -47,6 +51,7 @@ class UserWebhookController(
         @AuthenticationPrincipal principal: UserDetailDto,
         @PathVariable id: Long
     ): ResponseStatus<Boolean> {
+        validAuthentication(principal)
         return webhookService.deleteWebhook(principal.id, id)
     }
 
@@ -56,6 +61,20 @@ class UserWebhookController(
         page: RequestPage
     ): PageResponse<UserWebhookMessageLogDto> {
         return webhookService.findMessageLogByUserPk(principal.id, page.toPageRequest())
+    }
+
+
+    fun validAuthentication(principal: UserDetailDto) {
+        val sysWebhook = cacheSystemSettingService.getCacheSystemSettingKey(SystemSettingKey.WEBHOOK)?.value
+            ?: throw IllegalArgumentException("Webhook not found")
+
+
+        val hasRole = sysWebhook["hasRole"] as List<String>
+
+        val hasIntersection = hasRole.intersect(principal.roles.map { it.name }.toSet()).size == hasRole.size
+        if (!hasIntersection) {
+            throw IllegalArgumentException("사용할 권한이 없습니다.")
+        }
     }
 
 }

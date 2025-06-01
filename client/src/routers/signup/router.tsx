@@ -10,6 +10,7 @@ const SignupRouter: ExRouteObject = {
   id: 'root/signup',
   path: 'signup',
   name: 'Sign Up',
+  requiredRoles: [],
   Component: Layout,
   loader: async () => {
     const enabled = await systemSettingQuery.publicQuery().data[PublicKey.SIGN_UP].value.enabled;

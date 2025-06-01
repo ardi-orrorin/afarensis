@@ -197,4 +197,4 @@ VALUES ('WEBHOOK', '{
     "PASSWORD",
     "ROLE"
   ]
-}', FALSE);
+}', TRUE);

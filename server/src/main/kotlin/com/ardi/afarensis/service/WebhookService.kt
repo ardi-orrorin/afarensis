@@ -1,6 +1,7 @@
 package com.ardi.afarensis.service
 
 import com.ardi.afarensis.dto.ResStatus
+import com.ardi.afarensis.dto.SystemSettingKey
 import com.ardi.afarensis.dto.UserWebhookMessageLogDto
 import com.ardi.afarensis.dto.request.RequestWebhook
 import com.ardi.afarensis.dto.response.PageResponse
@@ -47,8 +48,19 @@ class WebhookService(
 
 
     fun saveWebhook(userPk: String, req: RequestWebhook.SaveWebhook): ResponseStatus<Boolean> {
+        val sysWebhook = getCacheSystemSettingKey(SystemSettingKey.WEBHOOK)?.value
+            ?: throw IllegalArgumentException("Webhook not found")
+
         val user = userRepository.findById(userPk)
             .orElseThrow { IllegalArgumentException("User not found") }
+
+        val hasRole = sysWebhook["hasRole"] as List<String>
+
+
+        val hasIntersection = hasRole.all { role -> role in user.userRoles.map { it.role.name } }
+        if (!hasIntersection) {
+            throw IllegalArgumentException("사용할 권한이 없습니다.")
+        }
 
         // TODO: Test Logic
 
