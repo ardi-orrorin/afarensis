@@ -1,18 +1,16 @@
 package com.ardi.afarensis.service
 
-import com.ardi.afarensis.dto.ResStatus
-import com.ardi.afarensis.dto.Role
-import com.ardi.afarensis.dto.SystemSettingKey
-import com.ardi.afarensis.dto.UserDto
+import com.ardi.afarensis.dto.*
 import com.ardi.afarensis.dto.request.RequestUser
 import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseUser
+import com.ardi.afarensis.dto.webhook.Webhook
 import com.ardi.afarensis.exception.UnSignRefreshTokenException
 import com.ardi.afarensis.exception.UnauthorizedException
 import com.ardi.afarensis.provider.MailProvider
 import com.ardi.afarensis.provider.TokenProvider
 import com.ardi.afarensis.util.StringUtil
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.springframework.data.domain.Sort
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService
 import org.springframework.security.core.userdetails.UserDetails
@@ -30,6 +28,7 @@ class UserService(
     private val tokenProvider: TokenProvider,
     private val stringUtil: StringUtil,
     private val mailProvider: MailProvider,
+    private val webhookService: WebhookService,
 ) : ReactiveUserDetailsService, BasicService() {
 
     override fun findByUsername(username: String?): Mono<UserDetails> {
@@ -173,7 +172,7 @@ class UserService(
     }
 
 
-    fun resetPassword(req: RequestUser.ResetPassword): ResponseStatus<Boolean> {
+    suspend fun resetPassword(req: RequestUser.ResetPassword): ResponseStatus<Boolean> {
         val user = userRepository.findByUserId(req.userId)
             ?: throw IllegalArgumentException("User not found")
 
@@ -188,6 +187,39 @@ class UserService(
         runBlocking { mailProvider.sendMail(req.email, "Reset Password", "Your new password is $newPwd") }
 
         userRepository.save(user)
+
+        // Fixme: 리펙토링 필요
+        val sysWebhook = getCacheSystemSettingKey(SystemSettingKey.WEBHOOK)
+            ?: throw RuntimeException("System not Init value")
+        val hasRole = sysWebhook.value["hasRole"] as List<Role>
+        val coverage = sysWebhook.value["coverage"] as List<Coverage>
+
+        if (coverage.contains(Coverage.PASSWORD)) {
+            val hasUserRoles = hasRole.all { role -> role in user.userRoles.map { it.role } }
+            if (hasUserRoles) {
+                if (user.webhooks.isNotEmpty()) {
+                    withContext(Dispatchers.IO) {
+                        user.webhooks.map {
+                            val webhook = Webhook(
+                                url = it.url,
+                                title = "Password Rested",
+                                content = "${user.userId} password reset",
+                                path = (getCacheSystemSettingKey(SystemSettingKey.INIT)?.value?.get("homeUrl")
+                                    ?: "") as String,
+                            )
+
+                            Pair(it.type, webhook)
+                        }.map {
+                            async {
+                                val webhookType = it.first
+                                val webhook = it.second
+                                webhookService.routeWebhook(webhookType, webhook)
+                            }
+                        }
+                    }.awaitAll()
+                }
+            }
+        }
 
         return ResponseStatus(
             ResStatus.SUCCESS,

@@ -8,13 +8,15 @@ import rootSchema from '../types/rootSchema';
 import systemSettingQuery from '../../master/system-setting/[features]/stores/query';
 import { AxiosError } from 'axios';
 import rootServiceApi from '../services/api';
+import { SystemSetting } from '../../master/system-setting/[features]/types/systemSetting';
+import PublicKey = SystemSetting.PublicKey;
 
 const InitMaster = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { refetch } = systemSettingQuery.publicQuery();
+  const { data: publicData, refetch } = systemSettingQuery.publicQuery();
 
-  const [input, setInput] = useState({} as RootType.Master);
+  const [input, setInput] = useState({ homeUrl: publicData[PublicKey.INIT].value.homeUrl } as RootType.Master);
   const [errors, setErrors] = useState({} as CommonType.FormErrors<RootType.Master>);
   const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef([] as HTMLInputElement[]);
@@ -69,9 +71,24 @@ const InitMaster = () => {
       <div className={styles['box']}>
         <h1>Master Account Setting</h1>
         <div className={styles['input-box']}>
-          <input className={errors.email && styles['error-input']}
+          <input className={errors.homeUrl && styles['error-input']}
                  ref={(el) => {
                    inputRefs.current[0] = el!;
+                 }}
+                 value={input.homeUrl}
+                 name={'homeUrl'}
+                 disabled={isLoading}
+                 placeholder={'홈페이지 주소를 입력해주세요'}
+                 onChange={onChangeInputHandler}
+                 onKeyUp={e => {
+                   if (e.key === 'Enter') {
+                     inputRefs.current[1]?.focus();
+                   }
+                 }}
+          />
+          <input className={errors.email && styles['error-input']}
+                 ref={(el) => {
+                   inputRefs.current[1] = el!;
                  }}
                  value={input.email}
                  name={'email'}
@@ -80,13 +97,13 @@ const InitMaster = () => {
                  onChange={onChangeInputHandler}
                  onKeyUp={e => {
                    if (e.key === 'Enter') {
-                     inputRefs.current[1]?.focus();
+                     inputRefs.current[2]?.focus();
                    }
                  }}
           />
           <input className={errors.pwd && styles['error-input']}
                  ref={(el) => {
-                   inputRefs.current[1] = el!;
+                   inputRefs.current[2] = el!;
                  }}
                  value={input.pwd}
                  name={'pwd'}
@@ -96,13 +113,13 @@ const InitMaster = () => {
                  onChange={onChangeInputHandler}
                  onKeyUp={e => {
                    if (e.key === 'Enter') {
-                     inputRefs.current[2]?.focus();
+                     inputRefs.current[3]?.focus();
                    }
                  }}
           />
           <input className={errors.pwdConfirm && styles['error-input']}
                  ref={(el) => {
-                   inputRefs.current[2] = el!;
+                   inputRefs.current[3] = el!;
                  }}
                  value={input.pwdConfirm}
                  name={'pwdConfirm'}

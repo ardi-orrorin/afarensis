@@ -2,6 +2,7 @@ package com.ardi.afarensis.dto.request
 
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
+import org.hibernate.validator.constraints.URL
 
 class RequestUser {
     data class SignIn(
@@ -48,7 +49,10 @@ class RequestUser {
         val pwd: String,
         @field:NotBlank(message = "이메일을 입력해주세요.")
         @field:Email(message = "이메일 형식이 아닙니다.")
-        val email: String
+        val email: String,
+        @field:NotBlank(message = "이메일을 입력해주세요.")
+        @field:URL(message = "URL 형식이 아닙니다.")
+        val homeUrl: String,
     )
 
     data class UpdatePassword(

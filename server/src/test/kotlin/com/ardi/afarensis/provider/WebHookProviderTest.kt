@@ -6,25 +6,33 @@ import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestMethodOrder
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 
 @SpringBootTest
-@ActiveProfiles("dev")
+@ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class WebHookProviderTest {
+    
     @MockitoSpyBean
     lateinit var webHookProvider: WebHookProvider
 
     val log = org.slf4j.LoggerFactory.getLogger(this::class.java)
 
+    @Value("\${webhook.discord}")
+    lateinit var discord: String
+
+    @Value("\${webhook.slack}")
+    lateinit var slack: String
+
 
     @Test
     fun discord() = runTest {
         val webhook = Webhook(
-            url = "",
+            url = discord,
             content = "test",
             title = "title test",
             path = "https://www.google.com",
@@ -40,7 +48,7 @@ class WebHookProviderTest {
     @Test
     fun toSlack() = runTest {
         val webhook = Webhook(
-            url = "",
+            url = slack,
             content = "test",
             title = "title test",
             path = "https://www.google.com",

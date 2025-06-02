@@ -1,0 +1,54 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: center;
+    gap: 0.8rem
+}
+
+.input-container {
+    display: flex;
+    gap: 20px;
+}
+
+.input-container > input {
+    width: 400px;
+    outline: none;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.input-container > button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer
+}
+
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    color: red;
+}
+
+.error-container > p {
+    margin: 0;
+}
+
+.response-container {
+    margin: 0;
+}
+
+.success {
+    color: green;
+}
+
+.error {
+    color: red;
+}

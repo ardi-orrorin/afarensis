@@ -39,10 +39,11 @@ class SystemSettingService(
         }
     }
 
-    suspend fun updateInit() = withContext(Dispatchers.IO) {
+    suspend fun updateInit(homeUrl: String) = withContext(Dispatchers.IO) {
         val newValue = mapOf(
             "initialized" to true,
             "isUpdatedMasterPwd" to true,
+            "homeUrl" to homeUrl,
         )
 
         update(SystemSettingKey.INIT, newValue)

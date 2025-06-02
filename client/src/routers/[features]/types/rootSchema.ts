@@ -4,6 +4,7 @@ const Master = z.object({
   email: z.string().email('이메일 형식이 아닙니다.'),
   pwd: z.string().min(8, '비밀번호 길이는 최소 8자 이상이어야 합니다.'),
   pwdConfirm: z.string().min(8, '비밀번호 길이는 최소 8자 이상이어야 합니다.'),
+  homeUrl: z.string().min(1, '홈페이지 URL을 입력해주세요.').url('URL 형식이 아닙니다.'),
 }).refine((data) =>
     data.pwd === data.pwdConfirm
   , {

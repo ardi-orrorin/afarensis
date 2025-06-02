@@ -46,14 +46,18 @@ class PublicUserController(
 
         val signInfo = userService.signIn(req, ip, userAgent);
 
-        listOf(
-            ResponseCookieEntity("access_token", signInfo.accessToken, signInfo.accessTokenExpiresIn, false),
-            ResponseCookieEntity("refresh_token", signInfo.refreshToken, signInfo.refreshTokenExpiresIn),
-            ResponseCookieEntity("user_id", signInfo.userId, signInfo.refreshTokenExpiresIn, false),
-            ResponseCookieEntity("roles", signInfo.roles.joinToString(":"), signInfo.accessTokenExpiresIn, false)
-        ).forEach {
-            response.addCookie(createResponseCookie(it))
-        }
+        withContext(Dispatchers.Default) {
+            listOf(
+                ResponseCookieEntity("access_token", signInfo.accessToken, signInfo.accessTokenExpiresIn, false),
+                ResponseCookieEntity("refresh_token", signInfo.refreshToken, signInfo.refreshTokenExpiresIn),
+                ResponseCookieEntity("user_id", signInfo.userId, signInfo.refreshTokenExpiresIn, false),
+                ResponseCookieEntity("roles", signInfo.roles.joinToString(":"), signInfo.accessTokenExpiresIn, false)
+            ).map {
+                async {
+                    response.addCookie(createResponseCookie(it))
+                }
+            }
+        }.awaitAll()
 
         val res = ResponseStatus(
             status = ResStatus.SUCCESS,
@@ -95,16 +99,17 @@ class PublicUserController(
 
         val signInfo = userService.publishAccessToken(req)
 
-        listOf(
-            ResponseCookieEntity("access_token", signInfo.accessToken, signInfo.accessTokenExpiresIn, false),
-            ResponseCookieEntity("roles", signInfo.roles.joinToString(":"), signInfo.accessTokenExpiresIn, false)
-        ).map {
-            async {
-                withContext(Dispatchers.Default) {
+        withContext(Dispatchers.Default) {
+            listOf(
+                ResponseCookieEntity("access_token", signInfo.accessToken, signInfo.accessTokenExpiresIn, false),
+                ResponseCookieEntity("roles", signInfo.roles.joinToString(":"), signInfo.accessTokenExpiresIn, false)
+            ).map {
+                async {
                     response.addCookie(
                         createResponseCookie(it)
                     )
                 }
+
             }
         }.awaitAll()
 
@@ -125,7 +130,7 @@ class PublicUserController(
 
         if (res.data!!) {
             withContext(Dispatchers.IO) {
-                systemSettingService.updateInit()
+                systemSettingService.updateInit(req.homeUrl)
             }
         }
 

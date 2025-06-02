@@ -6,7 +6,6 @@ type ResponseListT = {
 }
 
 type WebhookT = InputT & {
-  // id: number,
   userPk: number,
   createdAt: string,
 }
@@ -21,8 +20,8 @@ export namespace WebhookType {
   export enum WebhookType {
     DISCORD = 'DISCORD',
     SLACK = 'SLACK',
-    TELEGRAM = 'TELEGRAM',
-    GITHUB = 'GITHUB',
-    NOTION = 'NOTION'
+    // TELEGRAM = 'TELEGRAM',
+    // GITHUB = 'GITHUB',
+    // NOTION = 'NOTION'
   }
 }

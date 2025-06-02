@@ -3,14 +3,19 @@ package com.ardi.afarensis.service
 import com.ardi.afarensis.dto.ResStatus
 import com.ardi.afarensis.dto.SystemSettingKey
 import com.ardi.afarensis.dto.UserWebhookMessageLogDto
+import com.ardi.afarensis.dto.WebhookType
 import com.ardi.afarensis.dto.request.RequestWebhook
 import com.ardi.afarensis.dto.response.PageResponse
 import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseWebhook
+import com.ardi.afarensis.dto.webhook.Webhook
 import com.ardi.afarensis.entity.UserWebhook
+import com.ardi.afarensis.entity.UserWebhookMessageLog
+import com.ardi.afarensis.provider.WebHookProvider
 import com.ardi.afarensis.repository.UserWebhookMessageLogRepository
 import com.ardi.afarensis.repository.UserWebhookRepository
 import com.ardi.afarensis.util.toResponse
+import kotlinx.coroutines.*
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -20,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional
 class WebhookService(
     private val webhookRepository: UserWebhookRepository,
     private val userWebhookMessageLogRepository: UserWebhookMessageLogRepository,
+    private val webHookProvider: WebHookProvider,
 ) : BasicService() {
 
     @Transactional(readOnly = true)
@@ -46,7 +52,6 @@ class WebhookService(
         return logs.toResponse(logs.content.map { it.toDto() })
     }
 
-
     fun saveWebhook(userPk: String, req: RequestWebhook.SaveWebhook): ResponseStatus<Boolean> {
         val sysWebhook = getCacheSystemSettingKey(SystemSettingKey.WEBHOOK)?.value
             ?: throw IllegalArgumentException("Webhook not found")
@@ -62,7 +67,14 @@ class WebhookService(
             throw IllegalArgumentException("사용할 권한이 없습니다.")
         }
 
-        // TODO: Test Logic
+        // Send Message Test
+        runBlocking {
+            try {
+                routeWebhook(req.type, req.url)
+            } catch (e: Exception) {
+                throw IllegalArgumentException("Webhook url is not valid")
+            }
+        }
 
         user.let {
             val webhook = UserWebhook(
@@ -82,6 +94,7 @@ class WebhookService(
             data = true
         )
     }
+
 
     fun updateWebhook(userPk: String, req: RequestWebhook.SaveWebhook): ResponseStatus<Boolean> {
         val user = userRepository.findById(userPk)
@@ -115,6 +128,55 @@ class WebhookService(
             message = "Webhook deleted",
             data = true
         )
+    }
+
+
+    suspend fun sendWebhookMessage(webhook: Webhook) {
+        val webhookUsers = webhookRepository.findAll()
+
+        val jsonReq = withContext(Dispatchers.IO) {
+            webhookUsers.map {
+                async {
+                    val newWebhook = webhook.copy(url = it.url)
+                    routeWebhook(it.type, newWebhook)
+                }
+            }.awaitAll().first()
+        }
+
+        webhookUsers.map {
+            UserWebhookMessageLog(
+                message = jsonReq,
+                user = it.user!!,
+                userWebhooks = it
+            )
+        }.let {
+            userWebhookMessageLogRepository.saveAll(it)
+        }
+    }
+
+
+    suspend fun routeWebhook(type: WebhookType, url: String): Map<String, Any> {
+        val sysInit = systemSetting.getSystemSetting()[SystemSettingKey.INIT]?.value
+            ?: throw IllegalArgumentException("Default path not found")
+
+        val defaultPath = sysInit["homeUrl"] as String
+
+        val testData = Webhook(
+            url,
+            "$type connect test",
+            "This is a test message from $type webhook",
+            defaultPath,
+        )
+
+        return routeWebhook(type, testData)
+    }
+
+    suspend fun routeWebhook(type: WebhookType, webhook: Webhook): Map<String, Any> {
+        return when (type) {
+            WebhookType.SLACK -> webHookProvider.slack(webhook)
+            WebhookType.DISCORD -> webHookProvider.discord(webhook)
+            else -> throw IllegalArgumentException("Webhook type not found")
+        }
     }
 
 

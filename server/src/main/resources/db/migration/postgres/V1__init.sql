@@ -140,10 +140,12 @@ VALUES ('00000000000000000000000000', 'MASTER'),
 INSERT INTO system_settings (key, value, init_value, public)
 VALUES ('INIT', '{
   "initialized": false,
-  "isUpdatedMasterPwd": false
+  "isUpdatedMasterPwd": false,
+  "homeUrl": "http://localhost:3000"
 }', '{
   "initialized": false,
-  "isUpdatedMasterPwd": false
+  "isUpdatedMasterPwd": false,
+  "homeUrl": "http://localhost:3000"
 }', TRUE);
 
 INSERT INTO system_settings (key, value, init_value, public)

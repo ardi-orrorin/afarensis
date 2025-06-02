@@ -1,9 +1,8 @@
 package com.ardi.afarensis.provider
 
 import com.ardi.afarensis.dto.webhook.Webhook
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -16,15 +15,15 @@ class WebHookProvider(
     private val restTemplate: RestTemplate,
     private val objectMapper: ObjectMapper
 ) {
-    suspend fun discord(webhook: Webhook) {
-        sendMessage(webhook.url, webhook.toDiscord())
+    fun discord(webhook: Webhook): Map<String, Any> {
+        return sendMessage(webhook.url, webhook.toDiscord())
     }
 
-    suspend fun slack(webhook: Webhook) {
-        sendMessage(webhook.url, webhook.toSlack())
+    fun slack(webhook: Webhook): Map<String, Any> {
+        return sendMessage(webhook.url, webhook.toSlack())
     }
 
-    suspend fun sendMessage(url: String, meessage: Any) = withContext(Dispatchers.IO) {
+    fun sendMessage(url: String, meessage: Any): Map<String, Any> {
         val jsonReq = objectMapper.writeValueAsString(meessage)
 
         val headers = HttpHeaders()
@@ -34,8 +33,11 @@ class WebHookProvider(
             url,
             HttpMethod.POST,
             HttpEntity(jsonReq, headers),
-            Void::class.java
+            String::class.java
         )
+
+        val typeRef = object : TypeReference<Map<String, Any>>() {}
+        return objectMapper.readValue(jsonReq, typeRef)
     }
 
 

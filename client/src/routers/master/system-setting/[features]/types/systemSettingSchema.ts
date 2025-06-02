@@ -25,6 +25,7 @@ const SignUp = z.object({
 const Init = z.object({
   initialized: z.boolean(),
   isUpdatedMasterPwd: z.boolean(),
+  homeUrl: z.string().min(1, '홈 URL을 입력해주세요').url('올바른 URL 형식이 아닙니다'),
 });
 
 const Webhook = z.object({

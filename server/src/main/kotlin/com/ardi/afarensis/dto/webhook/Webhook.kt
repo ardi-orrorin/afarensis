@@ -7,8 +7,8 @@ data class Webhook(
     val content: String,
     val title: String,
     val path: String = "",
-    val thumbnail: String,
-    val author: String,
+    val thumbnail: String = "",
+    val author: String = "afarensis",
     val timestamp: Instant = Instant.now()
 ) {
     fun convertToTruncatedContent(content: String): String {
@@ -23,7 +23,7 @@ data class Webhook(
             color = 15258703,
             url = path,
             description = truncatedContent,
-            thumbnail = Discord.Thumbnail(thumbnail),
+            thumbnail = if (thumbnail.isNotBlank()) Discord.Thumbnail(thumbnail) else null,
             timestamp = timestamp,
             author = Discord.Author(name = "author : $author")
         )

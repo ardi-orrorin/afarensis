@@ -5,6 +5,7 @@ import SmtpRouter from './smtp/router';
 import UserRouter from './user/router';
 import { CommonType } from '../../../commons/types/commonType';
 import commonFunc from '../../../commons/services/funcs';
+import InitRouter from './init/router';
 import ExRouteObject = CommonType.ExRouteObject;
 
 const SystemSettingRouter: ExRouteObject = {
@@ -24,6 +25,7 @@ const SystemSettingRouter: ExRouteObject = {
     },
     SmtpRouter,
     UserRouter,
+    InitRouter,
   ],
 };
 
