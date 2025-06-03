@@ -49,7 +49,7 @@ const NavigationItem = ({ link, cookies }: NavigationItemProps) => {
 
   const hasRequiredRole = (): boolean => {
     const requiredRoles = link.requiredRoles;
-    const userRoles = cookies.roles?.split(':') ?? [];
+    const userRoles = commonFunc.fromBase64(cookies.roles ?? '').split(':') ?? [];
     const validRoles = commonFunc.validRoles({ requiredRoles, userRoles });
 
     return requiredRoles.length === 0 || validRoles || false;

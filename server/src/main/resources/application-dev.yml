@@ -6,6 +6,7 @@ server:
     key-store-password: testtest
     key-password: testtest
 
+
 spring:
   jpa:
     hibernate:
@@ -13,6 +14,11 @@ spring:
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     properties:
+      javax:
+        persistence:
+          sharedCache:
+            mode: ENABLE_SELECTIVE
+
       hibernate:
         format_sql: true
         show_sql: true
@@ -46,11 +52,16 @@ jwt:
 #  storage:
 #    dir: /Users/yuseungcheol/Desktop/test
 
-#logging:
-#  level:
-#    com.: trace
-#  file:
-#    path: ./logs
+logging:
+  level:
+    com.: debug
+    org.springframework.web: debug
+    org.springframework.http: debug
+
+  #    org.hibernate: debug
+  #    org.hibernate.type.descriptor.sql.BasicBinder: trace
+  file:
+    path: ./logs
 
 management:
   server:

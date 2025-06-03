@@ -9,7 +9,7 @@ import org.hibernate.annotations.SQLRestriction
 import org.hibernate.dialect.PostgreSQLDialect
 import java.time.Instant
 
-
+@Cacheable(value = true)
 @Entity
 @Table(name = "users")
 @SQLDelete(

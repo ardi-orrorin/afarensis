@@ -67,3 +67,6 @@ yarn-error.log*
 server/**/static
 application*.yml
 *.keystore
+*.log
+*.gz
+logs

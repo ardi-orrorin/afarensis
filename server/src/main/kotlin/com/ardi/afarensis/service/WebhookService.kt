@@ -1,14 +1,12 @@
 package com.ardi.afarensis.service
 
-import com.ardi.afarensis.dto.ResStatus
-import com.ardi.afarensis.dto.SystemSettingKey
-import com.ardi.afarensis.dto.UserWebhookMessageLogDto
-import com.ardi.afarensis.dto.WebhookType
+import com.ardi.afarensis.dto.*
 import com.ardi.afarensis.dto.request.RequestWebhook
 import com.ardi.afarensis.dto.response.PageResponse
 import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseWebhook
 import com.ardi.afarensis.dto.webhook.Webhook
+import com.ardi.afarensis.entity.User
 import com.ardi.afarensis.entity.UserWebhook
 import com.ardi.afarensis.entity.UserWebhookMessageLog
 import com.ardi.afarensis.provider.WebHookProvider
@@ -130,20 +128,45 @@ class WebhookService(
         )
     }
 
+    suspend fun sendWebhookMessageByCoverageWithRoles(
+        coverage: Coverage, user: User, title: String, content: String, path: String
+    ) = withContext(Dispatchers.IO) {
+        val sysWebhook = getCacheSystemSettingKey(SystemSettingKey.WEBHOOK)?.value
+            ?: throw RuntimeException("System not Init value")
 
-    suspend fun sendWebhookMessage(webhook: Webhook) {
-        val webhookUsers = webhookRepository.findAll()
+        val enabled = sysWebhook["enabled"] as Boolean
+        if (!enabled) return@withContext
 
-        val jsonReq = withContext(Dispatchers.IO) {
-            webhookUsers.map {
-                async {
-                    val newWebhook = webhook.copy(url = it.url)
-                    routeWebhook(it.type, newWebhook)
-                }
-            }.awaitAll().first()
-        }
+        val hasRole = sysWebhook["hasRole"] as List<String>
+        val coverages = sysWebhook["coverage"] as List<String>
 
-        webhookUsers.map {
+        if (!coverages.contains(coverage.name)) return@withContext
+
+        val userDto = user.toDto()
+
+        val hasUserRoles = hasRole.all { role -> role in userDto.roles.map { it.name } }
+
+        if (!hasUserRoles) return@withContext
+        if (userDto.webhooks.isEmpty()) return@withContext
+
+        val jsonReq = userDto.webhooks.map {
+            val webhook = Webhook(
+                url = it.url,
+                title = title,
+                content = content,
+                path = path,
+            )
+
+            Pair(it.type, webhook)
+        }.map {
+            async {
+                val webhookType = it.first
+                val webhook = it.second
+                routeWebhook(webhookType, webhook)
+            }
+        }.awaitAll().first()
+
+        user.webhooks.map {
             UserWebhookMessageLog(
                 message = jsonReq,
                 user = it.user!!,
@@ -153,7 +176,6 @@ class WebhookService(
             userWebhookMessageLogRepository.saveAll(it)
         }
     }
-
 
     suspend fun routeWebhook(type: WebhookType, url: String): Map<String, Any> {
         val sysInit = systemSetting.getSystemSetting()[SystemSettingKey.INIT]?.value

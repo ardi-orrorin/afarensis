@@ -2,10 +2,11 @@ package com.ardi.afarensis.controller
 
 import com.ardi.afarensis.service.SystemSettingService
 import com.ardi.afarensis.service.UserService
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseCookie
 import org.springframework.http.server.reactive.ServerHttpRequest
@@ -20,10 +21,15 @@ open class BasicController {
     @Autowired
     lateinit var cacheSystemSettingService: SystemSettingService
 
-    suspend fun removeCookie(res: ServerHttpResponse) = withContext(Dispatchers.Default) {
+    @Autowired
+    lateinit var mutex: Mutex
+
+    suspend fun removeCookie(res: ServerHttpResponse) = supervisorScope {
         listOf("access_token", "refresh_token", "user_id", "roles").map {
             async {
-                res.addCookie(createResponseCookie(ResponseCookieEntity(it, "", 0)))
+                mutex.withLock {
+                    res.addCookie(createResponseCookie(ResponseCookieEntity(it, "", 0)))
+                }
             }
         }.awaitAll()
     }

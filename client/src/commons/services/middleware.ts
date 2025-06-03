@@ -12,10 +12,10 @@ const authMiddleware = async () => {
   if (!userId) return;
 
   const accessToken = cookies.find((cookie) => cookie.startsWith('access_token'));
-  const roles = cookies.find((cookie) => cookie.startsWith('roles'));
-
-  if (accessToken && roles) return true;
   
+
+  if (accessToken) return true;
+
   try {
     await ExAxios<SignIn.Token, CommonType.PublishRefreshToken>({
       method: 'GET',

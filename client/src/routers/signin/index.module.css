@@ -20,7 +20,7 @@
     background-color: #fff;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     width: 650px;
-    gap: 50px;
+    gap: 20px;
 }
 
 .headline {
@@ -127,4 +127,11 @@
     cursor: pointer;
     color: #007bff;
     font-size: 1rem;
+}
+
+.error {
+    color: red;
+    font-size: 1rem;
+    font-weight: bold;
+    margin: 0;
 }

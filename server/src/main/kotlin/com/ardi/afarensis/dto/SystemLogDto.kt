@@ -11,7 +11,7 @@ data class SystemLogDto(
     val createdAt: Instant = Instant.now()
 ) {
     fun toEntity() = SystemLog(
-        id,
+        null,
         message,
         isRead,
         level,

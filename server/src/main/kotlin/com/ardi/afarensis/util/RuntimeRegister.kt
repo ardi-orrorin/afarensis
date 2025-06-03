@@ -67,7 +67,7 @@ class RuntimeRegister(
                 logCriticalSystemState()
                 (LoggerFactory.getILoggerFactory() as LoggerContext).stop()
             } catch (e: Exception) {
-                System.err.println("Emergency log failed: ${e.message}")
+                log.error("Emergency log failed: ${e.message}")
             }
         })
     }

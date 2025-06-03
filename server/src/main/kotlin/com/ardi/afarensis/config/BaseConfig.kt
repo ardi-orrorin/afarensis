@@ -1,5 +1,6 @@
 package com.ardi.afarensis.config
 
+import kotlinx.coroutines.sync.Mutex
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -24,4 +25,7 @@ class BaseConfig {
 
     @Bean
     fun restTemplate() = org.springframework.web.client.RestTemplate()
+
+    @Bean
+    fun mutex() = Mutex()
 }

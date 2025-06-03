@@ -3,10 +3,8 @@ package com.ardi.afarensis.controller.user
 import com.ardi.afarensis.controller.BasicController
 import com.ardi.afarensis.dto.SystemSettingKey
 import com.ardi.afarensis.dto.UserDetailDto
-import com.ardi.afarensis.dto.UserWebhookMessageLogDto
 import com.ardi.afarensis.dto.request.RequestPage
 import com.ardi.afarensis.dto.request.RequestWebhook
-import com.ardi.afarensis.dto.response.PageResponse
 import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseWebhook
 import com.ardi.afarensis.service.WebhookService
@@ -59,9 +57,7 @@ class UserWebhookController(
     suspend fun findLogByUserId(
         @AuthenticationPrincipal principal: UserDetailDto,
         page: RequestPage
-    ): PageResponse<UserWebhookMessageLogDto> {
-        return webhookService.findMessageLogByUserPk(principal.id, page.toPageRequest())
-    }
+    ) = webhookService.findMessageLogByUserPk(principal.id, page.toPageRequest())
 
 
     fun validAuthentication(principal: UserDetailDto) {
@@ -72,6 +68,7 @@ class UserWebhookController(
         val hasRole = sysWebhook["hasRole"] as List<String>
 
         val hasIntersection = hasRole.intersect(principal.roles.map { it.name }.toSet()).size == hasRole.size
+
         if (!hasIntersection) {
             throw IllegalArgumentException("사용할 권한이 없습니다.")
         }

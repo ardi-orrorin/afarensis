@@ -19,6 +19,7 @@ const Index = () => {
 
   const [login, setLogin] = useState({} as SignIn.Input);
   const [errors, setErrors] = useState({} as CommonType.FormErrors<SignIn.Input>);
+  const [response, setResponse] = useState({} as CommonType.ResponseStatus<boolean>);
   const [loading, setLoading] = useState(false);
   const pwdRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -52,10 +53,9 @@ const Index = () => {
       setToken(data);
 
       navigate('/');
-
     } catch (e) {
       const err = e as AxiosError;
-      console.log(err);
+      commonFunc.setResponseError(err, setResponse);
     } finally {
       setLoading(false);
     }
@@ -119,6 +119,10 @@ const Index = () => {
             {'>'}
           </button>
         </div>
+        {
+          response.status
+          && <p className={styles[response.status.toLowerCase()]}>{response.message}</p>
+        }
         <div>
           <button onClick={onClickResetHandler}
                   disabled={loading}
