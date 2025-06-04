@@ -202,4 +202,14 @@ class WebhookService(
     }
 
 
+    fun User.addWebhook(webhook: UserWebhook) {
+        webhooks.add(webhook)
+        webhook.user = this
+    }
+
+    fun User.removeWebhook(id: Long) {
+        val webhook = webhooks.find { it.id == id } ?: throw IllegalArgumentException("Webhook not found")
+        webhooks.remove(webhook)
+        webhook.user = null
+    }
 }

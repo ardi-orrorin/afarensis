@@ -3,10 +3,11 @@ package com.ardi.afarensis.controller
 import com.ardi.afarensis.dto.ResStatus
 import com.ardi.afarensis.dto.Role
 import com.ardi.afarensis.dto.UserDetailDto
-import com.ardi.afarensis.dto.UserDto
 import com.ardi.afarensis.dto.request.RequestUser
 import com.ardi.afarensis.dto.response.ResponseStatus
+import com.ardi.afarensis.dto.response.ResponseUser
 import com.ardi.afarensis.exception.UnauthorizedException
+import com.ardi.afarensis.service.PasskeyService
 import com.ardi.afarensis.service.SystemSettingService
 import jakarta.validation.Valid
 import kotlinx.coroutines.*
@@ -23,13 +24,14 @@ import java.util.*
 @RequestMapping("/api/v1/public/users")
 class PublicUserController(
     private val systemSettingService: SystemSettingService,
+    private val passkeyService: PasskeyService,
 ) : BasicController() {
 
     @GetMapping("exist-id/{userId}")
     suspend fun existUserId(
         @PathVariable userId: String
     ) = userService.existByUserId(userId)
-    
+
 
     @PostMapping("signup")
     suspend fun singUp(
@@ -47,38 +49,9 @@ class PublicUserController(
 
         val signInfo = userService.signIn(req, ip, userAgent);
 
-        val base64Roles = Base64.getEncoder()
-            .encode(signInfo.roles.joinToString(":").encodeToByteArray())
-            .toString(Charsets.UTF_8)
+        val (base64Roles, userId) = convertBase64EncodingByUserIdAndRoles(signInfo)
 
-        val userId = Base64.getEncoder()
-            .encode(signInfo.userId.encodeToByteArray())
-            .toString(Charsets.UTF_8)
-
-        listOf(
-            ResponseCookieEntity(
-                "access_token", signInfo.accessToken, signInfo.accessTokenExpiresIn, false
-            ),
-            ResponseCookieEntity(
-                "refresh_token", signInfo.refreshToken, signInfo.refreshTokenExpiresIn
-            ),
-            ResponseCookieEntity(
-                "user_id", userId, signInfo.refreshTokenExpiresIn, false
-            ),
-            ResponseCookieEntity(
-                "roles",
-                base64Roles,
-                signInfo.refreshTokenExpiresIn,
-                false
-            )
-        ).map {
-            async {
-                mutex.withLock {
-                    response.addCookie(createResponseCookie(it))
-                }
-            }
-        }.awaitAll()
-
+        createSignInCookies(signInfo, userId, base64Roles, response)
 
         val res = ResponseStatus(
             status = ResStatus.SUCCESS,
@@ -88,6 +61,43 @@ class PublicUserController(
 
         ResponseEntity.ok(res)
     }
+
+    @GetMapping("signin/passkey-start")
+    suspend fun signInPassKeyStart(
+        @RequestParam userId: String
+    ) = passkeyService.createAssertionRequest(userId)
+
+
+    @PostMapping("signin/passkey-finish")
+    suspend fun signInPassKey(
+        @Valid @RequestBody req: RequestUser.SignInPasskey,
+        request: ServerHttpRequest,
+        response: ServerHttpResponse
+    ): ResponseEntity<ResponseStatus<Boolean>> = supervisorScope {
+
+        val finishAssertion = passkeyService.finishAssertion(req.userId, req.assertion)
+
+        if (finishAssertion.status != ResStatus.SUCCESS) {
+            throw IllegalArgumentException("passkey sign in failed")
+        }
+
+        val (ip, userAgent) = getIpAndUserAgent(request)
+
+        val signInfo = userService.signIn(req.userId, ip, userAgent);
+
+        val (base64Roles, userId) = convertBase64EncodingByUserIdAndRoles(signInfo)
+
+        createSignInCookies(signInfo, userId, base64Roles, response)
+
+        val res = ResponseStatus(
+            status = ResStatus.SUCCESS,
+            message = "successfully sign in",
+            data = true
+        )
+
+        ResponseEntity.ok(res)
+    }
+
 
     @PostMapping("reset-password")
     suspend fun resetPassword(
@@ -193,5 +203,47 @@ class PublicUserController(
                 data = true
             )
         )
+    }
+
+    private suspend fun createSignInCookies(
+        signInfo: ResponseUser.SignIn,
+        userId: String,
+        base64Roles: String,
+        response: ServerHttpResponse
+    ) = supervisorScope {
+        listOf(
+            ResponseCookieEntity(
+                "access_token", signInfo.accessToken, signInfo.accessTokenExpiresIn, false
+            ),
+            ResponseCookieEntity(
+                "refresh_token", signInfo.refreshToken, signInfo.refreshTokenExpiresIn
+            ),
+            ResponseCookieEntity(
+                "user_id", userId, signInfo.refreshTokenExpiresIn, false
+            ),
+            ResponseCookieEntity(
+                "roles",
+                base64Roles,
+                signInfo.refreshTokenExpiresIn,
+                false
+            )
+        ).map {
+            async {
+                mutex.withLock {
+                    response.addCookie(createResponseCookie(it))
+                }
+            }
+        }.awaitAll()
+    }
+
+    private fun convertBase64EncodingByUserIdAndRoles(signInfo: ResponseUser.SignIn): Pair<String, String> {
+        val base64Roles = Base64.getEncoder()
+            .encode(signInfo.roles.joinToString(":").encodeToByteArray())
+            .toString(Charsets.UTF_8)
+
+        val userId = Base64.getEncoder()
+            .encode(signInfo.userId.encodeToByteArray())
+            .toString(Charsets.UTF_8)
+        return Pair(base64Roles, userId)
     }
 }

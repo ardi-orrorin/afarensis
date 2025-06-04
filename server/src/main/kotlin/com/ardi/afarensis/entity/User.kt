@@ -44,6 +44,16 @@ class User(
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var webhookMessageLogs: MutableList<UserWebhookMessageLog> = mutableListOf(),
+
+
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var userPasskeys: MutableList<UserPasskey> = mutableListOf(),
+
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var userPasskeyPendingRegistrations: MutableList<UserPasskeyPendingRegistration> = mutableListOf(),
+
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var userPasskeyPendingAssertions: MutableList<UserPasskeyPendingAssertion> = mutableListOf(),
 ) {
     @PrePersist
     fun generateId() {
@@ -79,34 +89,9 @@ class User(
         userRoles.add(userRole)
     }
 
-    fun addRefreshToken(refreshToken: String, ip: String, agent: String, expiredAt: Instant) {
-        userRefreshToken =
-            UserRefreshToken(
-                refreshToken = refreshToken,
-                expiredAt = expiredAt,
-                ip = ip,
-                userAgent = agent,
-                user = this
-            )
-    }
 
     fun addVerifyEmail(verifyCode: String) {
         userVerifyEmails.add(UserVerifyEmail(verifyKey = verifyCode, user = this))
-    }
-
-    fun removeRefreshToken() {
-        userRefreshToken = null
-    }
-
-    fun addWebhook(webhook: UserWebhook) {
-        webhooks.add(webhook)
-        webhook.user = this
-    }
-
-    fun removeWebhook(id: Long) {
-        val webhook = webhooks.find { it.id == id } ?: throw IllegalArgumentException("Webhook not found")
-        webhooks.remove(webhook)
-        webhook.user = null
     }
 
 }

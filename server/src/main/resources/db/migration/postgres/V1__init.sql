@@ -1,4 +1,4 @@
-CREATE TABLE users
+CREATE TABLE IF NOT EXISTS users
 (
     id          CHAR(26) PRIMARY KEY,
     user_id     VARCHAR(255) UNIQUE NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE users
     is_deleted  BOOLEAN      DEFAULT FALSE
 );
 
-CREATE TABLE users_details
+CREATE TABLE IF NOT EXISTS users_details
 (
     users_pk   CHAR(26),
     name       VARCHAR(500),
@@ -21,14 +21,14 @@ CREATE TABLE users_details
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE users_roles
+CREATE TABLE IF NOT EXISTS users_roles
 (
     id       BIGSERIAL PRIMARY KEY,
     users_pk CHAR(26),
     role     VARCHAR(50)
 );
 
-CREATE TABLE users_refresh_token
+CREATE TABLE IF NOT EXISTS users_refresh_token
 (
     id            BIGSERIAL PRIMARY KEY,
     users_pk      CHAR(26),
@@ -38,7 +38,7 @@ CREATE TABLE users_refresh_token
     expired_at    TIMESTAMP NOT NULL
 );
 
-CREATE TABLE users_verify_email
+CREATE TABLE IF NOT EXISTS users_verify_email
 (
     id         BIGSERIAL PRIMARY KEY,
     users_pk   CHAR(26),
@@ -47,7 +47,7 @@ CREATE TABLE users_verify_email
     expired_at TIMESTAMP NOT NULL
 );
 
-CREATE TABLE system_settings
+CREATE TABLE IF NOT EXISTS system_settings
 (
     id         SERIAL PRIMARY KEY,
     key        VARCHAR(255) NOT NULL,
@@ -56,7 +56,7 @@ CREATE TABLE system_settings
     public     BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE system_logs
+CREATE TABLE IF NOT EXISTS system_logs
 (
     id         BIGSERIAL PRIMARY KEY,
     message    VARCHAR(500),
@@ -65,7 +65,7 @@ CREATE TABLE system_logs
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE users_webhooks
+CREATE TABLE IF NOT EXISTS users_webhooks
 (
     id         BIGSERIAL PRIMARY KEY,
     users_pk   CHAR(26),
@@ -77,7 +77,7 @@ CREATE TABLE users_webhooks
     deleted_at TIMESTAMP DEFAULT NULL
 );
 
-CREATE TABLE users_webhooks_message_logs
+CREATE TABLE IF NOT EXISTS users_webhooks_message_logs
 (
     id                BIGSERIAL PRIMARY KEY,
     users_pk          CHAR(26),
@@ -85,6 +85,40 @@ CREATE TABLE users_webhooks_message_logs
     message           JSONB,
     created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS users_passkeys
+(
+    id           CHAR(26) PRIMARY KEY,
+    users_pk     CHAR(26),
+    user_handle  BYTEA,
+    credential   BYTEA,
+    public_key   BYTEA,
+    device_name  VARCHAR(255),
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_deleted   BOOLEAN   DEFAULT FALSE,
+    last_used_at TIMESTAMP DEFAULT NULL,
+    deleted_at   TIMESTAMP DEFAULT NULL
+);
+
+CREATE TABLE IF NOT EXISTS users_passkeys_pending_registrations
+(
+    id         CHAR(26) PRIMARY KEY,
+    users_pk   CHAR(26),
+    options    JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expired_at TIMESTAMP DEFAULT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS users_passkeys_pending_assertion
+(
+    id         CHAR(26) PRIMARY KEY,
+    users_pk   CHAR(26),
+    request    JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expired_at TIMESTAMP DEFAULT NULL
+);
+
 
 -- CREATE FOREIGN KEY
 ALTER TABLE users_details
@@ -115,6 +149,19 @@ ALTER TABLE users_webhooks_message_logs
 ALTER TABLE users_webhooks_message_logs
     ADD CONSTRAINT fk_users_webhooks_message_logs_users_webhooks
         FOREIGN KEY ( users_webhooks_pk ) REFERENCES users_webhooks ( id );
+
+ALTER TABLE users_passkeys
+    ADD CONSTRAINT fk_users_passkeys_users
+        FOREIGN KEY ( users_pk ) REFERENCES users ( id );
+
+ALTER TABLE users_passkeys_pending_registrations
+    ADD CONSTRAINT fk_users_passkeys_pending_registrations_users
+        FOREIGN KEY ( users_pk ) REFERENCES users ( id );
+
+ALTER TABLE users_passkeys_pending_assertion
+    ADD CONSTRAINT fk_users_passkeys_pending_assertion_users
+        FOREIGN KEY ( users_pk ) REFERENCES users ( id );
+
 
 -- CREATE UNIQUE
 ALTER TABLE users_roles
@@ -200,3 +247,15 @@ VALUES ('WEBHOOK', '{
     "ROLE"
   ]
 }', TRUE);
+
+
+INSERT INTO system_settings (key, value, init_value, public)
+VALUES ('PASSKEY', '{
+  "domain": "localhost",
+  "port": 3000,
+  "displayName": "afarensis"
+}', '{
+  "domain": "localhost",
+  "port": 3000,
+  "displayName": "afarensis"
+}', FALSE);

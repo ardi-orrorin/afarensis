@@ -8,5 +8,6 @@ enum class ResStatus {
     BAD_REQUEST,
     UNAUTHORIZED,
     FORBIDDEN,
-    INTERNAL_SERVER_ERROR
+    INTERNAL_SERVER_ERROR,
+    SKIP
 }

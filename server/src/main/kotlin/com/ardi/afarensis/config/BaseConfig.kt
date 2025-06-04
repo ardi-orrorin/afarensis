@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
+import kotlin.random.Random
 
 @Configuration
 @EnableCaching
@@ -28,4 +29,7 @@ class BaseConfig {
 
     @Bean
     fun mutex() = Mutex()
+
+    @Bean
+    fun random() = Random
 }

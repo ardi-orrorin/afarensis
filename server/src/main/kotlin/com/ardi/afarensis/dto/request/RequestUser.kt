@@ -12,6 +12,14 @@ class RequestUser {
         val pwd: String,
     )
 
+    data class SignInPasskey(
+        @field:NotBlank(message = "아이디를 입력해주세요.")
+        val userId: String,
+
+        @field:NotBlank(message = "passkey를 입력해주세요.")
+        val assertion: String,
+    )
+
     data class SignUp(
         @field:NotBlank(message = "아이디를 입력해주세요.")
         val userId: String,

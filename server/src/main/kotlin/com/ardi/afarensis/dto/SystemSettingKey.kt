@@ -4,5 +4,6 @@ enum class SystemSettingKey {
     INIT,
     SMTP,
     SIGN_UP,
-    WEBHOOK
+    WEBHOOK,
+    PASSKEY,
 }

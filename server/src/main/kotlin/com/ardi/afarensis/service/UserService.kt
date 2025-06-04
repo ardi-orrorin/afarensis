@@ -4,6 +4,8 @@ import com.ardi.afarensis.dto.*
 import com.ardi.afarensis.dto.request.RequestUser
 import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseUser
+import com.ardi.afarensis.entity.User
+import com.ardi.afarensis.entity.UserRefreshToken
 import com.ardi.afarensis.exception.UnSignRefreshTokenException
 import com.ardi.afarensis.exception.UnauthorizedException
 import com.ardi.afarensis.provider.MailProvider
@@ -80,16 +82,25 @@ class UserService(
         }.toDto()
     }
 
+    fun signIn(username: String, ip: String, userAgent: String): ResponseUser.SignIn {
+        val user = userRepository.findByUserId(username)
+            ?: throw RuntimeException("User not found")
+
+        return signIn(user, ip, userAgent)
+    }
+
     fun signIn(req: RequestUser.SignIn, ip: String, userAgent: String): ResponseUser.SignIn {
         val user = userRepository.findByUserId(req.userId)
             ?: throw RuntimeException("User not found")
 
-        val userDto = user.toDto();
-
-        if (!bCryptPasswordEncoder.matches(req.pwd, userDto.pwd)) {
+        if (!bCryptPasswordEncoder.matches(req.pwd, user.pwd)) {
             throw IllegalArgumentException("Password not matched")
         }
 
+        return signIn(user, ip, userAgent)
+    }
+
+    fun signIn(user: User, ip: String, userAgent: String): ResponseUser.SignIn {
         user.let {
             if (user.userRefreshToken != null) {
                 it.removeRefreshToken()
@@ -98,9 +109,9 @@ class UserService(
             }
         }
 
-        val accessToken = tokenProvider.generateToken(userDto.userId, false)
+        val accessToken = tokenProvider.generateToken(user.userId, false)
 
-        val refreshToken = tokenProvider.generateToken(userDto.userId, true)
+        val refreshToken = tokenProvider.generateToken(user.userId, true)
 
 
         user.let {
@@ -120,8 +131,8 @@ class UserService(
                 webhookService.sendWebhookMessageByCoverageWithRoles(
                     Coverage.SIGNIN,
                     user,
-                    "${userDto.userId}님이 로그인 했습니다.",
-                    "${userDto.userId}님이 로그인 했습니다.",
+                    "${user.userId}님이 로그인 했습니다.",
+                    "${user.userId}님이 로그인 했습니다.",
                     homeUrl
                 )
             } catch (e: Exception) {
@@ -134,11 +145,10 @@ class UserService(
             tokenProvider.ACCESS_EXP,
             refreshToken,
             tokenProvider.REFRESH_EXP,
-            userDto.userId,
-            userDto.roles.toSet(),
+            user.userId,
+            user.userRoles.map { it.role }.toSet(),
         )
     }
-
 
     fun publishAccessToken(req: RequestUser.RefreshToken): ResponseUser.SignIn {
         val user = userRepository.findByUserId(req.userId)
@@ -180,7 +190,6 @@ class UserService(
             ?.let {
                 it.removeRefreshToken()
                 userRepository.save(it)
-
                 ResponseStatus(
                     ResStatus.SUCCESS,
                     "Sign out success",
@@ -286,4 +295,20 @@ class UserService(
             true,
         )
     }
+
+    fun User.addRefreshToken(refreshToken: String, ip: String, agent: String, expiredAt: Instant) {
+        userRefreshToken =
+            UserRefreshToken(
+                refreshToken = refreshToken,
+                expiredAt = expiredAt,
+                ip = ip,
+                userAgent = agent,
+                user = this
+            )
+    }
+
+    fun User.removeRefreshToken() {
+        userRefreshToken = null
+    }
+
 }
