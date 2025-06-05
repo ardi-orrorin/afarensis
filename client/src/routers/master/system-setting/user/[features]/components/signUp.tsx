@@ -73,23 +73,22 @@ const SignUp = () => {
     }
   };
 
-  const initHandle = async () => {
-    setLoading(true);
-    try {
-      const res = await systemSettingServiceApi.putInit(PublicKey.SIGN_UP);
-      await refetch();
-      setResponse(res);
-    } catch (e) {
-      const err = e as AxiosError;
-      commonFunc.axiosError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const buttons = [
-    { text: '저장', onClick: saveHandle, disabled: loading },
-    { text: '초기화', onClick: initHandle, disabled: loading },
+    {
+      text: '저장',
+      onClick: saveHandle,
+      disabled: loading,
+    },
+    {
+      text: '초기화',
+      onClick: () => systemSettingFunc.initHandle({
+        key: PublicKey.SIGN_UP,
+        setLoading,
+        setResponse,
+        refetch,
+      }),
+      disabled: loading,
+    },
   ] as SystemSetting.SettingTemplateBtn[];
 
 

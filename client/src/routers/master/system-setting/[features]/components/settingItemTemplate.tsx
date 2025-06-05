@@ -31,6 +31,7 @@ const SettingItemTemplate =
             {
               inputs.map(input => (
                 <input
+                  className={input.className}
                   key={input.name}
                   type={input.type}
                   name={input.name}

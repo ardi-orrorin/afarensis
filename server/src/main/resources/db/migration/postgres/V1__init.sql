@@ -251,11 +251,13 @@ VALUES ('WEBHOOK', '{
 
 INSERT INTO system_settings (key, value, init_value, public)
 VALUES ('PASSKEY', '{
+  "enabled": false,
   "domain": "localhost",
-  "port": 3000,
+  "port": 433,
   "displayName": "afarensis"
 }', '{
+  "enabled": false,
   "domain": "localhost",
-  "port": 3000,
+  "port": 443,
   "displayName": "afarensis"
-}', FALSE);
+}', TRUE);

@@ -1,6 +1,7 @@
 package com.ardi.afarensis.entity
 
 import com.ardi.afarensis.dto.UserPasskeyDto
+import com.ardi.afarensis.dto.response.ResponsePasskey
 import com.github.f4b6a3.ulid.UlidCreator
 import jakarta.persistence.*
 import org.hibernate.annotations.DialectOverride.SQLDelete
@@ -54,5 +55,9 @@ class UserPasskey(
         publicKey = publicKey,
         deviceName = deviceName,
         lastUsedAt = lastUsedAt,
+    )
+
+    fun toSummary() = ResponsePasskey.Summary(
+        id!!, deviceName, lastUsedAt, createdAt
     )
 }

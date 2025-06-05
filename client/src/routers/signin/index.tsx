@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SignIn } from './[features]/types/signin';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './index.module.css';
@@ -13,11 +13,13 @@ import FindPassword from './[features]/components/findPassword';
 import systemSettingQuery from '../master/system-setting/[features]/stores/query';
 import { SystemSetting } from '../master/system-setting/[features]/types/systemSetting';
 import PublicKey = SystemSetting.PublicKey;
+import ResStatus = CommonType.ResStatus;
 
 
 const Index = () => {
 
   const [login, setLogin] = useState({} as SignIn.Input);
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({} as CommonType.FormErrors<SignIn.Input>);
   const [response, setResponse] = useState({} as CommonType.ResponseStatus<boolean>);
   const [loading, setLoading] = useState(false);
@@ -26,14 +28,58 @@ const Index = () => {
   const { setToken } = useSignInToken();
   const { addModal } = useModal();
   const { value: signUp } = systemSettingQuery.publicQuery().data[PublicKey.SIGN_UP];
+  const { value: passkey } = systemSettingQuery.publicQuery().data[PublicKey.PASSKEY];
 
+  const [timeoutFunc, setTimeoutFunc] = useState<NodeJS.Timeout>();
+
+  useEffect(() => {
+    return () => {
+      if (timeoutFunc) {
+        clearTimeout(timeoutFunc);
+      }
+    };
+  }, []);
 
   const isValid = useMemo(() => {
     return signInSchema.Input.safeParse(login).success;
   }, [login]);
 
+  const activePassKey = useCallback(async () => {
+    const notSupportedPasskey = !window.PublicKeyCredential
+      || !navigator.credentials
+      || !navigator.credentials.create
+      || !passkey.enabled;
+
+    if (notSupportedPasskey || !login.userId) {
+      return goPasswordInput();
+
+    }
+
+    try {
+      const assertion = await signInService.getAssertion({ userId: login.userId });
+      if (assertion.status === ResStatus.SKIP) {
+        return goPasswordInput();
+      }
+
+      // todo:처리 로직 추가
+
+    } catch (e) {
+      const err = e as AxiosError;
+      commonFunc.setResponseError(err, setResponse);
+    }
+  }, [login.userId]);
+
   const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLogin({ ...login, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === 'userId' && showPassword) {
+      setShowPassword(false);
+      setLogin({
+        ...login, [name]: value, pwd: '',
+      });
+    } else {
+      setLogin({ ...login, [name]: value });
+    }
 
     const result = signInSchema.Input.safeParse(login);
 
@@ -59,19 +105,27 @@ const Index = () => {
     } finally {
       setLoading(false);
     }
-
   };
 
-  const onClickResetHandler = () => {
+  const onClickResetHandler = useCallback(() => {
     setLogin({} as SignIn.Request);
-  };
-  const findPasswordHandler = () => {
+  }, []);
+
+  const findPasswordHandler = useCallback(() => {
     addModal({
       title: 'Find Password',
       isOpen: true,
       children: <FindPassword />,
     });
-  };
+  }, []);
+
+  const goPasswordInput = useCallback(() => {
+    setShowPassword(true);
+    const timeout = setTimeout(() => {
+      pwdRef.current?.focus();
+    }, 200);
+    setTimeoutFunc(timeout);
+  }, [pwdRef.current]);
 
   return (
     <div className={styles['container']}>
@@ -85,9 +139,10 @@ const Index = () => {
                    placeholder={'아이디를 입력하세요'}
                    disabled={loading}
                    type={'text'}
-                   onKeyDown={(e) => {
-                     if (e.key !== 'Enter') return;
-                     pwdRef.current?.focus();
+                   onKeyDown={async (e) => {
+                     if (e.key === 'Enter' || e.key === 'Tab') {
+                       await activePassKey();
+                     }
                    }}
             />
             {
@@ -95,18 +150,21 @@ const Index = () => {
               && errors.userId.length > 0
               && <p>{errors.userId}</p>
             }
-            <input name={'pwd'}
-                   ref={pwdRef}
-                   value={login.pwd ?? ''}
-                   onChange={onChangeHandler}
-                   placeholder={'비밀번호를 입력하세요'}
-                   disabled={loading}
-                   type={'password'}
-                   onKeyDown={(e) => {
-                     if (e.key !== 'Enter' || !isValid) return;
-                     onClickSubmitHandler();
-                   }}
-            />
+            {
+              showPassword
+              && <input name={'pwd'}
+                        ref={pwdRef}
+                        value={login.pwd ?? ''}
+                        onChange={onChangeHandler}
+                        placeholder={'비밀번호를 입력하세요'}
+                        disabled={loading}
+                        type={'password'}
+                        onKeyDown={(e) => {
+                          if (e.key !== 'Enter' || !isValid) return;
+                          onClickSubmitHandler();
+                        }}
+              />
+            }
             {
               errors.pwd
               && errors.pwd.length > 0

@@ -18,9 +18,9 @@ export type ExAxiosProps<I> = {
   timeout?: number;
 };
 
-async function exAxios<R = any, I = any>(props: ExAxiosProps<I> & { isReturnData: true }): Promise<R>;
-async function exAxios<R = any, I = any>(props: ExAxiosProps<I> & { isReturnData: false }): Promise<AxiosResponse<R>>;
-async function exAxios<R = any, I = any>(props: ExAxiosProps<I>): Promise<AxiosResponse<R>>;
+function exAxios<R = any, I = any>(props: ExAxiosProps<I> & { isReturnData: true }): Promise<R>;
+function exAxios<R = any, I = any>(props: ExAxiosProps<I> & { isReturnData: false }): Promise<AxiosResponse<R>>;
+function exAxios<R = any, I = any>(props: ExAxiosProps<I>): Promise<AxiosResponse<R>>;
 
 async function exAxios<R = any, I = any>(props: ExAxiosProps<I>): Promise<R | AxiosResponse<R>> {
   const { url, method, body, params, contentType, isReturnData, timeout, headers, cache } =

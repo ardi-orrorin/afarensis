@@ -34,8 +34,15 @@ const Webhook = z.object({
   coverage: z.array(z.nativeEnum(SystemSetting.Coverage)),
 });
 
+const Passkey = z.object({
+  enabled: z.boolean(),
+  domain: z.string().min(1, '도메인을 입력해주세요').regex(/^(?!https?:\/\/).+$/, '도메인만 입력해주세요'),
+  port: z.number().min(1, '포트 번호를 입력해주세요').max(65535, '포트 번호는 65535 이하로 입력해주세요'),
+  displayName: z.string().min(1, '표시 이름을 입력해주세요'),
+});
+
 const systemSettingSchema = {
-  Init, SignUp, Smtp, Webhook,
+  Init, SignUp, Smtp, Webhook, Passkey,
 };
 
 export default systemSettingSchema;

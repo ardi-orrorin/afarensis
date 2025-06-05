@@ -1,6 +1,7 @@
 package com.ardi.afarensis.service
 
 import com.ardi.afarensis.dto.ResStatus
+import com.ardi.afarensis.dto.response.ResponsePasskey
 import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.entity.User
 import com.ardi.afarensis.entity.UserPasskey
@@ -17,6 +18,20 @@ import org.springframework.transaction.annotation.Transactional
 class PasskeyService(
     private val passkeyProvider: PasskeyProvider,
 ) : BasicService() {
+
+    @Transactional(readOnly = true)
+    fun findAllByUserPk(userPk: String): ResponsePasskey.SummaryList {
+        val user = userRepository.findById(userPk)
+            .orElseThrow {
+                throw IllegalArgumentException("User not found")
+            }
+
+        return ResponsePasskey.SummaryList(
+            user.userPasskeys.map {
+                it.toSummary()
+            }.toMutableList()
+        )
+    }
 
     fun createCredentialOptions(username: String): ResponseStatus<String> {
         val user = userRepository.findByUserId(username)
@@ -155,6 +170,22 @@ class PasskeyService(
 
     fun User.removePendingAssertion() {
         userPasskeyPendingAssertions = mutableListOf()
+    }
+
+    fun delete(userPk: String, passkeyId: String): ResponseStatus<Boolean> {
+        val user = userRepository.findById(userPk).orElseThrow {
+            throw IllegalArgumentException("User not found")
+        }
+
+        user.userPasskeys.removeIf { it.id == passkeyId }
+
+        userRepository.save(user)
+
+        return ResponseStatus(
+            status = ResStatus.SUCCESS,
+            message = "Passkey deleted successfully",
+            data = true,
+        )
     }
 
 

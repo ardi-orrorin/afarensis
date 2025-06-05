@@ -2,19 +2,20 @@ import { z } from 'zod';
 import systemSettingSchema from './systemSettingSchema';
 
 
-interface PublicSystemSettingI {
+type PublicSystemSettingI = {
+  [key in keyof typeof SystemSetting.PublicKey]: SystemSettingValueI<SystemSetting.PublicKey>;
+} & {
   [SystemSetting.PublicKey.SIGN_UP]: SystemSettingValueI<SystemSetting.PublicKey.SIGN_UP>;
   [SystemSetting.PublicKey.INIT]: SystemSettingValueI<SystemSetting.PublicKey.INIT>;
   [SystemSetting.PublicKey.WEBHOOK]: SystemSettingValueI<SystemSetting.PublicKey.WEBHOOK>;
-
-  [key: string]: SystemSettingValueI<SystemSetting.PublicKey>;
+  [SystemSetting.PublicKey.PASSKEY]: SystemSettingValueI<SystemSetting.PublicKey.PASSKEY>;
 }
 
-interface PrivateSystemSettingI {
+type PrivateSystemSettingI = {
+  [key in keyof typeof SystemSetting.PrivateKey]: SystemSettingValueI<SystemSetting.PrivateKey>;
+} & {
   [SystemSetting.PrivateKey.SMTP]: SystemSettingValueI<SystemSetting.PrivateKey.SMTP>;
-
-  [key: string]: SystemSettingValueI<SystemSetting.PrivateKey>;
-}
+};
 
 interface SystemSettingValueI<T extends SystemSetting.PrivateKey | SystemSetting.PublicKey> {
   key: T;
@@ -27,6 +28,7 @@ interface ValueI {
   [SystemSetting.PublicKey.SIGN_UP]: SystemSetting.SignUp;
   [SystemSetting.PublicKey.INIT]: SystemSetting.Init;
   [SystemSetting.PublicKey.WEBHOOK]: SystemSetting.Webhook;
+  [SystemSetting.PublicKey.PASSKEY]: SystemSetting.PassKey;
 
   [SystemSetting.PrivateKey.SMTP]: SystemSetting.Smtp;
 
@@ -37,6 +39,7 @@ type InitT = z.infer<typeof systemSettingSchema.Init>;
 type SignUpT = z.infer<typeof systemSettingSchema.SignUp>;
 type SmtpT = z.infer<typeof systemSettingSchema.Smtp>;
 type WebhookT = z.infer<typeof systemSettingSchema.Webhook>;
+type PassKeyT = z.infer<typeof systemSettingSchema.Passkey>;
 
 
 type SettingTemplateBtnT = {
@@ -60,6 +63,7 @@ export namespace SystemSetting {
   export type SignUp = SignUpT;
   export type Smtp = SmtpT;
   export type Webhook = WebhookT;
+  export type PassKey = PassKeyT;
   export type PublicSystemSetting = PublicSystemSettingI;
   export type PrivateSystemSetting = PrivateSystemSettingI;
   export type SystemSettingValue<T extends SystemSetting.PublicKey | SystemSetting.PrivateKey> = SystemSettingValueI<T>
@@ -71,6 +75,7 @@ export namespace SystemSetting {
     SIGN_UP = 'SIGN_UP',
     INIT = 'INIT',
     WEBHOOK = 'WEBHOOK',
+    PASSKEY = 'PASSKEY'
   }
 
   export enum PrivateKey {

@@ -14,6 +14,11 @@ class UserPasskeyController(
     private val passkeyService: PasskeyService
 ) : BasicController() {
 
+    @GetMapping("")
+    fun findAllByUserId(
+        @AuthenticationPrincipal principal: UserDetailDto
+    ) = passkeyService.findAllByUserPk(principal.id)
+
     @GetMapping("credential")
     fun getCredential(
         @AuthenticationPrincipal principal: UserDetailDto,
@@ -25,4 +30,11 @@ class UserPasskeyController(
         @AuthenticationPrincipal principal: UserDetailDto,
         @Valid @RequestBody req: RequestPasskey.Registration
     ) = passkeyService.finishRegistration(principal.id, req.json)
+
+    @DeleteMapping("")
+    fun delete(
+        @RequestParam id: String,
+        @AuthenticationPrincipal principal: UserDetailDto
+    ) = passkeyService.delete(principal.id, id)
+
 }
