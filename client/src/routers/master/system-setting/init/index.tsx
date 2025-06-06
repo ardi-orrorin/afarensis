@@ -1,6 +1,6 @@
 import systemSettingQuery from '../[features]/stores/query';
 import { SystemSetting } from '../[features]/types/systemSetting';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CommonType } from '../../../../commons/types/commonType';
 import systemSettingFunc from '../[features]/service/func';
 import styles from './index.module.css';
@@ -13,11 +13,18 @@ import PublicKey = SystemSetting.PublicKey;
 const Index = () => {
   const { data } = systemSettingQuery.publicQuery();
 
-  const [value, setValue] = useState(data?.[PublicKey.INIT].value);
+  const [value, setValue] = useState(data[PublicKey.INIT].value);
 
   const [errors, setErrors] = useState({} as CommonType.FormErrors<SystemSetting.Init>);
   const [response, setResponse] = useState({} as CommonType.ResponseStatus<boolean>);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!data) return;
+
+    setValue(data[PublicKey.INIT].value);
+
+  }, [data]);
 
   const changeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value: v } = e.target;

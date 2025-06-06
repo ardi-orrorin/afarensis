@@ -12,6 +12,10 @@ import { useModal } from '../../commons/hooks/useModal';
 import FindPassword from './[features]/components/findPassword';
 import systemSettingQuery from '../master/system-setting/[features]/stores/query';
 import { SystemSetting } from '../master/system-setting/[features]/types/systemSetting';
+import passkeyServiceApi from '../user/passkey/[features]/services/api';
+import * as webauthnJson from '@github/webauthn-json';
+import { CredentialRequestOptionsJSON } from '@github/webauthn-json';
+import { PassKeyType } from '../user/passkey/[features]/types/passkey';
 import PublicKey = SystemSetting.PublicKey;
 import ResStatus = CommonType.ResStatus;
 
@@ -55,17 +59,33 @@ const Index = () => {
 
     }
 
+
     try {
-      const assertion = await signInService.getAssertion({ userId: login.userId });
+      setLoading(true);
+      const assertion = await passkeyServiceApi.getAssertionOption(login.userId);
+
       if (assertion.status === ResStatus.SKIP) {
         return goPasswordInput();
       }
+      const options = JSON.parse(assertion.data) as CredentialRequestOptionsJSON;
+      const credentail = await webauthnJson.get(options);
 
-      // todo:처리 로직 추가
+      const body = {
+        userId: login.userId,
+        assertion: JSON.stringify(credentail),
+      } as PassKeyType.FinishAssertionRequest;
+
+      const res = await passkeyServiceApi.postFinishAssertion(body);
+      if (res.status === ResStatus.SUCCESS) {
+        navigate('/');
+      }
+
+      // todo 실패 처리 로직
 
     } catch (e) {
-      const err = e as AxiosError;
-      commonFunc.setResponseError(err, setResponse);
+      return goPasswordInput();
+    } finally {
+      setLoading(false);
     }
   }, [login.userId]);
 
@@ -96,6 +116,7 @@ const Index = () => {
     setLoading(true);
     try {
       const data = await signInService.postSignIn(login);
+
       setToken(data);
 
       navigate('/');
@@ -123,7 +144,7 @@ const Index = () => {
     setShowPassword(true);
     const timeout = setTimeout(() => {
       pwdRef.current?.focus();
-    }, 200);
+    }, 50);
     setTimeoutFunc(timeout);
   }, [pwdRef.current]);
 
@@ -142,8 +163,10 @@ const Index = () => {
                    onKeyDown={async (e) => {
                      if (e.key === 'Enter' || e.key === 'Tab') {
                        await activePassKey();
+                       goPasswordInput();
                      }
                    }}
+                   autoFocus
             />
             {
               errors?.userId

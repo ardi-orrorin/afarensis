@@ -12,6 +12,7 @@ import com.yubico.webauthn.AssertionRequest
 import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
 
 @Service
 @Transactional
@@ -38,7 +39,7 @@ class PasskeyService(
             ?: throw IllegalArgumentException("User not found")
 
         val userIdentity = user.userPasskeyPendingRegistrations.let {
-            if (it.isEmpty()) {
+            if (user.userPasskeys.isEmpty()) {
                 passkeyProvider.createUserIdentity(username)
             } else {
                 passkeyProvider.createUserIdentity(username, user.userPasskeys.first().userHandle)
@@ -47,6 +48,7 @@ class PasskeyService(
 
         val credential = passkeyProvider.createCredentialCreationOptions(userIdentity)
 
+        user.removePendingRegistration()
         user.addPendingRegistration(credential)
 
         return ResponseStatus(
@@ -56,7 +58,7 @@ class PasskeyService(
         )
     }
 
-    fun finishRegistration(username: String, json: String): ResponseStatus<Boolean> {
+    fun finishRegistration(username: String, json: String, userAgent: String): ResponseStatus<Boolean> {
         val user = userRepository.findByUserId(username)
             ?: throw IllegalArgumentException("User not found")
 
@@ -65,10 +67,16 @@ class PasskeyService(
 
         val result = passkeyProvider.registrationResult(pendingRegistration.options, json)
 
-        user.addPasskey(pendingRegistration.options.user.id.bytes, result.keyId.id.bytes, result.publicKeyCose.bytes)
+        val deviceName = Regex("""\(([^;]+);""").find(userAgent)?.groups?.get(1)?.value ?: "Unknown"
 
-        user.removePendingRegistration(user.id!!)
+        user.addPasskey(
+            pendingRegistration.options.user.id.bytes,
+            result.keyId.id.bytes,
+            result.publicKeyCose.bytes,
+            deviceName
+        )
 
+        user.removePendingRegistration()
         userRepository.save(user)
 
         return ResponseStatus(
@@ -92,6 +100,7 @@ class PasskeyService(
 
         val request = passkeyProvider.createAssertionRequest(username)
 
+        user.removePendingAssertion()
         user.addPendingAssertion(request)
 
         userRepository.save(user)
@@ -113,14 +122,18 @@ class PasskeyService(
         }
 
         val result = requests.map { passkeyProvider.assertionResult(it, json) }
-            .any { it.isSuccess }
+            .filter { it.isSuccess }.firstOrNull()
 
-        if (!result) {
+        if (result == null) {
             throw IllegalArgumentException("Assertion failed")
         }
 
+        user.userPasskeys.find { it.credential.contentEquals(result.credential.credentialId.bytes) }?.let {
+            it.lastUsedAt = Instant.now()
+        }
 
         user.removePendingAssertion()
+
         userRepository.save(user)
 
         return ResponseStatus(
@@ -131,12 +144,13 @@ class PasskeyService(
     }
 
 
-    fun User.addPasskey(userHandle: ByteArray, credential: ByteArray, publicKey: ByteArray) {
+    fun User.addPasskey(userHandle: ByteArray, credential: ByteArray, publicKey: ByteArray, deviceName: String) {
         userPasskeys.add(
             UserPasskey(
                 userHandle = userHandle,
                 credential = credential,
                 publicKey = publicKey,
+                deviceName = deviceName,
                 user = this
             )
         )
@@ -156,8 +170,8 @@ class PasskeyService(
         userPasskeyPendingRegistrations.add(pendingRegistration)
     }
 
-    fun User.removePendingRegistration(id: String) {
-        userPasskeyPendingRegistrations.removeIf { it.id == id }
+    fun User.removePendingRegistration() {
+        userPasskeyPendingRegistrations.clear()
     }
 
     fun User.addPendingAssertion(request: AssertionRequest) {
@@ -169,7 +183,7 @@ class PasskeyService(
     }
 
     fun User.removePendingAssertion() {
-        userPasskeyPendingAssertions = mutableListOf()
+        userPasskeyPendingAssertions.clear()
     }
 
     fun delete(userPk: String, passkeyId: String): ResponseStatus<Boolean> {
@@ -187,6 +201,4 @@ class PasskeyService(
             data = true,
         )
     }
-
-
 }

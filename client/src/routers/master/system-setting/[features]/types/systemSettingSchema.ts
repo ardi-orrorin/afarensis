@@ -37,7 +37,7 @@ const Webhook = z.object({
 const Passkey = z.object({
   enabled: z.boolean(),
   domain: z.string().min(1, '도메인을 입력해주세요').regex(/^(?!https?:\/\/).+$/, '도메인만 입력해주세요'),
-  port: z.number().min(1, '포트 번호를 입력해주세요').max(65535, '포트 번호는 65535 이하로 입력해주세요'),
+  port: z.coerce.number().max(65535, '최대값은 65535 입니다.').min(1),
   displayName: z.string().min(1, '표시 이름을 입력해주세요'),
 });
 

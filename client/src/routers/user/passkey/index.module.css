@@ -1,0 +1,51 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.buttons > button {
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background-color: #666666;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.35s ease-in-out;
+}
+
+.buttons > button:hover {
+    background-color: #444444;
+}
+
+.list-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: #666666 1px solid;
+    border-radius: 10px;
+}
+
+.list-container > h3 {
+    margin: 0;
+    font-weight: 700;
+
+}
+
+
+.list-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.empty {
+    font-weight: 700;
+    color: #666666;
+}

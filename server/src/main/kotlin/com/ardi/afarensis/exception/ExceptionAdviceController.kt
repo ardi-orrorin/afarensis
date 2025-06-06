@@ -1,6 +1,7 @@
 package com.ardi.afarensis.exception
 
 import com.ardi.afarensis.controller.BasicController
+import com.ardi.afarensis.util.CookieUtil
 import kotlinx.coroutines.runBlocking
 import org.apache.hc.client5.http.auth.AuthenticationException
 import org.springframework.http.HttpStatus
@@ -11,13 +12,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import java.time.LocalDateTime
 
 @RestControllerAdvice
-class ExceptionAdviceController : BasicController() {
+class ExceptionAdviceController(
+    private val cookieUtil: CookieUtil,
+) : BasicController() {
 
 
     @ExceptionHandler(UnauthorizedException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun handleUnauthorizedException(ex: UnauthorizedException, res: ServerHttpResponse): ErrorResponse = runBlocking {
-        removeCookie(res)
+        cookieUtil.removeCookie(res)
 
         ErrorResponse(
             message = ex.message ?: "Unauthorized",
@@ -31,7 +34,7 @@ class ExceptionAdviceController : BasicController() {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun handleUnSignRefreshTokenException(ex: UnSignRefreshTokenException, res: ServerHttpResponse): ErrorResponse =
         runBlocking {
-            removeCookie(res)
+            cookieUtil.removeCookie(res)
 
             ErrorResponse(
                 message = ex.message ?: "UnSignRefreshToken",
@@ -44,7 +47,7 @@ class ExceptionAdviceController : BasicController() {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun handleAuthenticationException(ex: AuthenticationException, res: ServerHttpResponse): ErrorResponse =
         runBlocking {
-            removeCookie(res)
+            cookieUtil.removeCookie(res)
 
             ErrorResponse(
                 message = ex.message ?: "Authentication failed",

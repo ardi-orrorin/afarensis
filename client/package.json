@@ -5,6 +5,7 @@
   "proxy": "https://localhost:8080",
   "homepage": "/",
   "dependencies": {
+    "@github/webauthn-json": "^2.1.1",
     "@hookform/resolvers": "^5.0.1",
     "@tanstack/react-query": "^5.76.1",
     "@testing-library/dom": "^10.4.0",

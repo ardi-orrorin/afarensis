@@ -20,12 +20,12 @@ class PasskeyConfig(
             ?: throw Exception("Passkey setting not found")
 
         val domain: String = sysPasskey["domain"] as String
-        val port: Int = sysPasskey["port"] as Int
+        val port = sysPasskey["port"] as String
 
         return RelyingParty.builder()
             .identity(relyingPartyIdentity)
             .credentialRepository(credentialRepositoryImpl)
-            .origins(setOf("https://$domain:$port"))
+            .origins(setOf("https://$domain:$port", "http://$domain:$port"))
             .build()
     }
 

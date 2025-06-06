@@ -1,0 +1,37 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: #666666 1px solid;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    width: 350px;
+    cursor: pointer;
+    transition: background-color 0.35s ease-in-out;
+}
+
+.container:hover {
+    cursor: pointer;
+    background-color: #aaa;
+    color: #eee;
+    border: none;
+}
+
+.container > h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.date {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.date > span {
+    font-weight: 600;
+}
+
+.date > p {
+    margin: 0;
+}

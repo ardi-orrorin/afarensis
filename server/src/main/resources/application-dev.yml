@@ -26,7 +26,11 @@ spring:
     username: postgres
     password: root
     hikari:
-      maximum-pool-size: 21
+      maximum-pool-size: 27
+      minimum-idle: 27
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 18000
 
   devtools:
     livereload:
@@ -51,6 +55,7 @@ jwt:
 logging:
   level:
     com.: debug
+    org.hibernate: debug
     org.springframework.web: debug
     org.springframework.http: debug
     org.flywaydb.: debug

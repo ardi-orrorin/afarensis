@@ -5,25 +5,24 @@ import com.github.f4b6a3.ulid.UlidCreator
 import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.annotations.SQLRestriction
 import org.hibernate.type.SqlTypes
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 @Entity
 @Table(name = "users_passkeys_pending_registrations")
-@SQLRestriction("expired_at > now()")
+//@SQLRestriction("expired_at > now()") fixme: 쿼리는 문제 없는데 찾지 못함
 class UserPasskeyPendingRegistration(
     @Id
     var id: String? = null,
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb", nullable = false, updatable = false)
+    @Column(columnDefinition = "jsonb")
     @Convert(converter = JsonToPublicKeyCredentialCreationOptions::class)
     var options: PublicKeyCredentialCreationOptions,
     var createdAt: Instant = Instant.now(),
     var expiredAt: Instant = Instant.now().plus(5, ChronoUnit.MINUTES),
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_pk", insertable = true, updatable = true)
     var user: User? = null

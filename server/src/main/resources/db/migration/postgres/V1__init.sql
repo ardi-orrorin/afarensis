@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS users_passkeys_pending_registrations
 );
 
 
-CREATE TABLE IF NOT EXISTS users_passkeys_pending_assertion
+CREATE TABLE IF NOT EXISTS users_passkeys_pending_assertions
 (
     id         CHAR(26) PRIMARY KEY,
     users_pk   CHAR(26),
@@ -158,7 +158,7 @@ ALTER TABLE users_passkeys_pending_registrations
     ADD CONSTRAINT fk_users_passkeys_pending_registrations_users
         FOREIGN KEY ( users_pk ) REFERENCES users ( id );
 
-ALTER TABLE users_passkeys_pending_assertion
+ALTER TABLE users_passkeys_pending_assertions
     ADD CONSTRAINT fk_users_passkeys_pending_assertion_users
         FOREIGN KEY ( users_pk ) REFERENCES users ( id );
 

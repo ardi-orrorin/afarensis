@@ -104,6 +104,7 @@ const baseFetchQueryFn = <R = any, A = any, D = any>
     queryFn,
     queryKey,
     initialData,
+    refetchOnWindowFocus: false,
   });
 
   const actions = reactQuery.createQueryActions<R>({ queryKey, queryOp });

@@ -7,6 +7,7 @@ import styles from './leftNavigator.module.css';
 import { useCookies } from 'react-cookie';
 import systemSettingQuery from '../../routers/master/system-setting/[features]/stores/query';
 import { SystemSetting } from '../../routers/master/system-setting/[features]/types/systemSetting';
+import { useQuery } from '@tanstack/react-query';
 import RoutePathObject = CommonType.RoutePathObject;
 import PublicKey = SystemSetting.PublicKey;
 
@@ -42,7 +43,13 @@ const LeftNavigator = () => {
 
 const NavigationItem = ({ link, cookies }: NavigationItemProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: publicData } = systemSettingQuery.publicQuery();
+  const { queryOp } = systemSettingQuery.publicQuery();
+  const { data: publicData } = useQuery(queryOp);
+
+  if (!publicData) {
+    return null;
+  }
+
   const signUp = publicData[PublicKey.SIGN_UP].value;
 
   const isAuthenticated = Boolean(cookies.access_token ?? cookies.user_id);

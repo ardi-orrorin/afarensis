@@ -12,6 +12,7 @@ import PublicKey = SystemSetting.PublicKey;
 
 const SignUp = () => {
   const { data: publicData, refetch } = systemSettingQuery.publicQuery();
+  
   const [value, setValue] = useState(publicData[PublicKey.SIGN_UP].value);
   const [errors, setErrors] = useState({} as CommonType.FormErrors<SystemSetting.SignUp>);
   const [loading, setLoading] = useState(false);

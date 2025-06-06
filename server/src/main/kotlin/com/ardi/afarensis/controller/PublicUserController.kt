@@ -6,11 +6,12 @@ import com.ardi.afarensis.dto.UserDetailDto
 import com.ardi.afarensis.dto.request.RequestUser
 import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseUser
-import com.ardi.afarensis.exception.UnauthorizedException
 import com.ardi.afarensis.service.PasskeyService
 import com.ardi.afarensis.service.SystemSettingService
+import com.ardi.afarensis.util.CookieUtil
 import jakarta.validation.Valid
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.springframework.http.ResponseEntity
 import org.springframework.http.server.reactive.ServerHttpRequest
@@ -25,6 +26,8 @@ import java.util.*
 class PublicUserController(
     private val systemSettingService: SystemSettingService,
     private val passkeyService: PasskeyService,
+    private val cookieUtil: CookieUtil,
+    private val mutex: Mutex
 ) : BasicController() {
 
     @GetMapping("exist-id/{userId}")
@@ -45,7 +48,7 @@ class PublicUserController(
         request: ServerHttpRequest,
         response: ServerHttpResponse
     ): ResponseEntity<ResponseStatus<Boolean>> = supervisorScope {
-        val (ip, userAgent) = getIpAndUserAgent(request)
+        val (ip, userAgent) = cookieUtil.getIpAndUserAgent(request)
 
         val signInfo = userService.signIn(req, ip, userAgent);
 
@@ -81,7 +84,7 @@ class PublicUserController(
             throw IllegalArgumentException("passkey sign in failed")
         }
 
-        val (ip, userAgent) = getIpAndUserAgent(request)
+        val (ip, userAgent) = cookieUtil.getIpAndUserAgent(request)
 
         val signInfo = userService.signIn(req.userId, ip, userAgent);
 
@@ -105,70 +108,70 @@ class PublicUserController(
     ) = userService.resetPassword(req)
 
 
-    @GetMapping("refresh")
-    suspend fun publishAccessToken(
-        request: ServerHttpRequest,
-        response: ServerHttpResponse,
-    ) = supervisorScope {
-        val refreshToken = request.cookies["refresh_token"]
-            ?.firstOrNull()?.value
-            ?: throw UnauthorizedException("refresh token is not found")
-
-        val base64UserId = request.cookies["user_id"]
-            ?.firstOrNull()?.value
-            ?: throw UnauthorizedException("user id is not found")
-
-        val decodedUserId = Base64.getDecoder()
-            .decode(base64UserId)
-            .toString(Charsets.UTF_8)
-
-
-        val (ip, userAgent) = getIpAndUserAgent(request)
-
-        val req = RequestUser.RefreshToken(
-            refreshToken,
-            decodedUserId,
-            ip,
-            userAgent
-        )
-
-        val signInfo = userService.publishAccessToken(req)
-
-        val base64Roles =
-            Base64.getEncoder()
-                .encode(signInfo.roles.joinToString(":").encodeToByteArray())
-                .toString(Charsets.UTF_8)
-
-        listOf(
-            ResponseCookieEntity("access_token", signInfo.accessToken, signInfo.accessTokenExpiresIn, false),
-            ResponseCookieEntity(
-                "user_id", base64UserId, signInfo.refreshTokenExpiresIn, false
-            ),
-            ResponseCookieEntity(
-                "roles",
-                base64Roles,
-                signInfo.refreshTokenExpiresIn,
-                false
-            )
-        ).map {
-            async {
-                mutex.withLock {
-                    response.addCookie(
-                        createResponseCookie(it)
-                    )
-                }
-            }
-        }.awaitAll()
-
-
-        val res = ResponseStatus(
-            status = ResStatus.SUCCESS,
-            message = "successfully publish access token",
-            data = true
-        )
-
-        ResponseEntity.ok(res)
-    }
+//    @GetMapping("refresh")
+//    suspend fun publishAccessToken(
+//        request: ServerHttpRequest,
+//        response: ServerHttpResponse,
+//    ) = supervisorScope {
+//        val refreshToken = request.cookies["refresh_token"]
+//            ?.firstOrNull()?.value
+//            ?: throw UnauthorizedException("refresh token is not found")
+//
+//        val base64UserId = request.cookies["user_id"]
+//            ?.firstOrNull()?.value
+//            ?: throw UnauthorizedException("user id is not found")
+//
+//        val decodedUserId = Base64.getDecoder()
+//            .decode(base64UserId)
+//            .toString(Charsets.UTF_8)
+//
+//
+//        val (ip, userAgent) = getIpAndUserAgent(request)
+//
+//        val req = RequestUser.RefreshToken(
+//            refreshToken,
+//            decodedUserId,
+//            ip,
+//            userAgent
+//        )
+//
+//        val signInfo = userService.publishAccessToken(req)
+//
+//        val base64Roles =
+//            Base64.getEncoder()
+//                .encode(signInfo.roles.joinToString(":").encodeToByteArray())
+//                .toString(Charsets.UTF_8)
+//
+//        listOf(
+//            ResponseCookieEntity("access_token", signInfo.accessToken, signInfo.accessTokenExpiresIn, false),
+//            ResponseCookieEntity(
+//                "user_id", base64UserId, signInfo.refreshTokenExpiresIn, false
+//            ),
+//            ResponseCookieEntity(
+//                "roles",
+//                base64Roles,
+//                signInfo.refreshTokenExpiresIn,
+//                false
+//            )
+//        ).map {
+//            async {
+//                mutex.withLock {
+//                    response.addCookie(
+//                        createResponseCookie(it)
+//                    )
+//                }
+//            }
+//        }.awaitAll()
+//
+//
+//        val res = ResponseStatus(
+//            status = ResStatus.SUCCESS,
+//            message = "successfully publish access token",
+//            data = true
+//        )
+//
+//        ResponseEntity.ok(res)
+//    }
 
     @PatchMapping("master")
     suspend fun updateMaster(
@@ -190,7 +193,7 @@ class PublicUserController(
         @AuthenticationPrincipal principal: UserDetailDto?,
         response: ServerHttpResponse
     ): ResponseEntity<ResponseStatus<Boolean>> {
-        removeCookie(response)
+        cookieUtil.removeCookie(response)
 
         if (principal != null) {
             userService.signOut(principal.userId)
@@ -212,16 +215,16 @@ class PublicUserController(
         response: ServerHttpResponse
     ) = supervisorScope {
         listOf(
-            ResponseCookieEntity(
+            CookieUtil.ResponseCookieEntity(
                 "access_token", signInfo.accessToken, signInfo.accessTokenExpiresIn, false
             ),
-            ResponseCookieEntity(
+            CookieUtil.ResponseCookieEntity(
                 "refresh_token", signInfo.refreshToken, signInfo.refreshTokenExpiresIn
             ),
-            ResponseCookieEntity(
+            CookieUtil.ResponseCookieEntity(
                 "user_id", userId, signInfo.refreshTokenExpiresIn, false
             ),
-            ResponseCookieEntity(
+            CookieUtil.ResponseCookieEntity(
                 "roles",
                 base64Roles,
                 signInfo.refreshTokenExpiresIn,
@@ -230,7 +233,7 @@ class PublicUserController(
         ).map {
             async {
                 mutex.withLock {
-                    response.addCookie(createResponseCookie(it))
+                    response.addCookie(cookieUtil.createResponseCookie(it))
                 }
             }
         }.awaitAll()
