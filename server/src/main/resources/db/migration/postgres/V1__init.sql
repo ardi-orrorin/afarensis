@@ -119,6 +119,17 @@ CREATE TABLE IF NOT EXISTS users_passkeys_pending_assertions
     expired_at TIMESTAMP DEFAULT NULL
 );
 
+CREATE TABLE IF NOT EXISTS users_otps
+(
+    id           BIGSERIAL PRIMARY KEY,
+    users_pk     CHAR(26),
+    hash         VARCHAR(256),
+    status       VARCHAR(10),
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_deleted   BOOLEAN   DEFAULT FALSE,
+    last_used_at TIMESTAMP DEFAULT NULL,
+    deleted_at   TIMESTAMP DEFAULT NULL
+);
 
 -- CREATE FOREIGN KEY
 ALTER TABLE users_details
@@ -162,6 +173,10 @@ ALTER TABLE users_passkeys_pending_assertions
     ADD CONSTRAINT fk_users_passkeys_pending_assertion_users
         FOREIGN KEY ( users_pk ) REFERENCES users ( id );
 
+
+ALTER TABLE users_otps
+    ADD CONSTRAINT fk_users_otps_users
+        FOREIGN KEY ( users_pk ) REFERENCES users ( id );
 
 -- CREATE UNIQUE
 ALTER TABLE users_roles
@@ -260,4 +275,13 @@ VALUES ('PASSKEY', '{
   "domain": "localhost",
   "port": 443,
   "displayName": "afarensis"
+}', TRUE);
+
+INSERT INTO system_settings (key, value, init_value, public)
+VALUES ('OTP', '{
+  "enabled": true,
+  "issuer": "afarensis"
+}', '{
+  "enabled": true,
+  "issuer": "afarensis"
 }', TRUE);

@@ -16,7 +16,7 @@ const ErrorComponent = () => {
 
 const BasicErrorComponent = ({ err }: { err: Error }) => {
   const navigate = useNavigate();
-  const [count, setCount] = useState(5);
+  const [count, setCount] = useState(2);
 
   useEffect(() => {
     if (count === 0) {

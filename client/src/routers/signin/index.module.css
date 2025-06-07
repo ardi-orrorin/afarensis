@@ -129,6 +129,10 @@
     font-size: 1rem;
 }
 
+.find-password:disabled {
+    background-color: inherit !important;
+}
+
 .error {
     color: red;
     font-size: 1rem;

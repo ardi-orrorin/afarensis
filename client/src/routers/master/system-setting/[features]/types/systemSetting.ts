@@ -9,6 +9,7 @@ type PublicSystemSettingI = {
   [SystemSetting.PublicKey.INIT]: SystemSettingValueI<SystemSetting.PublicKey.INIT>;
   [SystemSetting.PublicKey.WEBHOOK]: SystemSettingValueI<SystemSetting.PublicKey.WEBHOOK>;
   [SystemSetting.PublicKey.PASSKEY]: SystemSettingValueI<SystemSetting.PublicKey.PASSKEY>;
+  [SystemSetting.PublicKey.OTP]: SystemSettingValueI<SystemSetting.PublicKey.OTP>;
 }
 
 type PrivateSystemSettingI = {
@@ -29,6 +30,7 @@ interface ValueI {
   [SystemSetting.PublicKey.INIT]: SystemSetting.Init;
   [SystemSetting.PublicKey.WEBHOOK]: SystemSetting.Webhook;
   [SystemSetting.PublicKey.PASSKEY]: SystemSetting.PassKey;
+  [SystemSetting.PublicKey.OTP]: SystemSetting.Otp;
 
   [SystemSetting.PrivateKey.SMTP]: SystemSetting.Smtp;
 
@@ -40,6 +42,7 @@ type SignUpT = z.infer<typeof systemSettingSchema.SignUp>;
 type SmtpT = z.infer<typeof systemSettingSchema.Smtp>;
 type WebhookT = z.infer<typeof systemSettingSchema.Webhook>;
 type PassKeyT = z.infer<typeof systemSettingSchema.Passkey>;
+type OtpT = z.infer<typeof systemSettingSchema.Otp>;
 
 
 type SettingTemplateBtnT = {
@@ -64,6 +67,7 @@ export namespace SystemSetting {
   export type Smtp = SmtpT;
   export type Webhook = WebhookT;
   export type PassKey = PassKeyT;
+  export type Otp = OtpT;
   export type PublicSystemSetting = PublicSystemSettingI;
   export type PrivateSystemSetting = PrivateSystemSettingI;
   export type SystemSettingValue<T extends SystemSetting.PublicKey | SystemSetting.PrivateKey> = SystemSettingValueI<T>
@@ -75,7 +79,8 @@ export namespace SystemSetting {
     SIGN_UP = 'SIGN_UP',
     INIT = 'INIT',
     WEBHOOK = 'WEBHOOK',
-    PASSKEY = 'PASSKEY'
+    PASSKEY = 'PASSKEY',
+    OTP = 'OTP'
   }
 
   export enum PrivateKey {

@@ -6,4 +6,5 @@ enum class SystemSettingKey {
     SIGN_UP,
     WEBHOOK,
     PASSKEY,
+    OTP,
 }

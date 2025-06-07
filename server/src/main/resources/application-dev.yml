@@ -27,10 +27,20 @@ spring:
     password: root
     hikari:
       maximum-pool-size: 27
-      minimum-idle: 27
-      connection-timeout: 30000
+      minimum-idle: 54
+      pool-name: afarensis-pool
+      connection-test-query: SELECT 1
+      connection-timeout: 3000
+      validation-timeout: 3000
       idle-timeout: 600000
       max-lifetime: 18000
+      schema: afarensis
+      health-check-properties:
+        maximumTimeout: 3000
+        validationQuery: SELECT 1
+        validationQueryTimeout: 3000
+
+
 
   devtools:
     livereload:

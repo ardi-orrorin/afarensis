@@ -6,10 +6,10 @@ import com.ardi.afarensis.dto.response.ResponseStatus
 import com.ardi.afarensis.dto.response.ResponseUser
 import com.ardi.afarensis.entity.User
 import com.ardi.afarensis.entity.UserRefreshToken
-import com.ardi.afarensis.exception.UnSignRefreshTokenException
 import com.ardi.afarensis.exception.UnauthorizedException
 import com.ardi.afarensis.provider.MailProvider
 import com.ardi.afarensis.provider.TokenProvider
+import com.ardi.afarensis.repository.UserRefreshTokenRepository
 import com.ardi.afarensis.util.StringUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +32,7 @@ class UserService(
     private val tokenProvider: TokenProvider,
     private val stringUtil: StringUtil,
     private val mailProvider: MailProvider,
-    private val webhookService: WebhookService
+    private val webhookService: WebhookService, private val userRefreshTokenRepository: UserRefreshTokenRepository
 ) : ReactiveUserDetailsService, BasicService() {
 
     override fun findByUsername(username: String?): Mono<UserDetails> {
@@ -113,7 +113,6 @@ class UserService(
 
         val refreshToken = tokenProvider.generateToken(user.userId, true)
 
-
         user.let {
             it.addRefreshToken(
                 refreshToken,
@@ -156,11 +155,11 @@ class UserService(
 
         user.userRefreshToken?.let { refreshToken ->
             if (refreshToken.refreshToken != req.refreshToken) {
-                throw UnSignRefreshTokenException("Refresh token not matched")
+                throw UnauthorizedException("Refresh token not matched")
             }
 
             if (refreshToken.expiredAt.isBefore(Instant.now())) {
-                throw IllegalArgumentException("Refresh token expired")
+                throw UnauthorizedException("Refresh token expired")
             }
 
             if (refreshToken.ip != req.ip) {
@@ -170,7 +169,6 @@ class UserService(
             if (refreshToken.userAgent != req.userAgent) {
                 throw UnauthorizedException("User agent not matched")
             }
-
         } ?: throw UnauthorizedException("Refresh token not found")
 
         val accessToken = tokenProvider.generateToken(user.userId, false)
@@ -184,6 +182,7 @@ class UserService(
             user.userRoles.map { it.role }.toSet(),
         )
     }
+
 
     fun signOut(userId: String): ResponseStatus<Boolean> {
         return userRepository.findByUserId(userId)

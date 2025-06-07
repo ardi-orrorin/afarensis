@@ -5,6 +5,7 @@ import { CommonType } from '../../commons/types/commonType';
 import WebhookRouter from './webhook/router';
 import commonFunc from '../../commons/services/funcs';
 import PasskeyRouter from './passkey/router';
+import OtpRouter from './otp/router';
 import ExRouteObject = CommonType.ExRouteObject;
 
 const UserRouter: ExRouteObject = {
@@ -24,6 +25,7 @@ const UserRouter: ExRouteObject = {
     PasswordRouter,
     WebhookRouter,
     PasskeyRouter,
+    OtpRouter,
   ],
 };
 

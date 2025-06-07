@@ -32,6 +32,7 @@ repositories {
 extra["springCloudVersion"] = "2024.0.1"
 
 dependencies {
+    implementation("commons-codec:commons-codec:1.18.0")
     implementation("com.github.f4b6a3:ulid-creator:5.2.3")
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("org.springframework.boot:spring-boot-starter-actuator")

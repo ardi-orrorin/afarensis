@@ -1,6 +1,7 @@
 import SignUp from './[features]/components/signUp';
 import Webhook from './[features]/components/webhook';
 import Passkey from './[features]/components/passkey';
+import Otp from './[features]/components/otp';
 
 const Index = () => {
 
@@ -9,6 +10,7 @@ const Index = () => {
       <SignUp />
       <Webhook />
       <Passkey />
+      <Otp />
     </>
   );
 };

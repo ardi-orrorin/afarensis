@@ -1,6 +1,7 @@
 package com.ardi.afarensis.config
 
 import kotlinx.coroutines.sync.Mutex
+import org.apache.commons.codec.binary.Base32
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -32,4 +33,7 @@ class BaseConfig {
 
     @Bean
     fun random() = Random
+
+    @Bean
+    fun base32() = Base32()
 }

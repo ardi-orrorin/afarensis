@@ -1,5 +1,6 @@
 package com.ardi.afarensis.entity
 
+import com.ardi.afarensis.dto.OtpStatus
 import com.ardi.afarensis.dto.UserDetailDto
 import com.ardi.afarensis.dto.UserDto
 import com.github.f4b6a3.ulid.UlidCreator
@@ -45,7 +46,6 @@ class User(
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var webhookMessageLogs: MutableList<UserWebhookMessageLog> = mutableListOf(),
 
-
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var userPasskeys: MutableList<UserPasskey> = mutableListOf(),
 
@@ -54,6 +54,9 @@ class User(
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var userPasskeyPendingAssertions: MutableList<UserPasskeyPendingAssertion> = mutableListOf(),
+
+    @OneToOne(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var otp: UserOtp? = null,
 ) {
     @PrePersist
     fun generateId() {
@@ -92,6 +95,10 @@ class User(
 
     fun addVerifyEmail(verifyCode: String) {
         userVerifyEmails.add(UserVerifyEmail(verifyKey = verifyCode, user = this))
+    }
+
+    fun addOtp(secretKey: String) {
+        otp = UserOtp(hash = secretKey, status = OtpStatus.PENDING, user = this)
     }
 
 }

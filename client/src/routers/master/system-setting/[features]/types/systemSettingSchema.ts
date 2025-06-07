@@ -41,8 +41,13 @@ const Passkey = z.object({
   displayName: z.string().min(1, '표시 이름을 입력해주세요'),
 });
 
+const Otp = z.object({
+  enabled: z.boolean(),
+  issuer: z.string().min(1, '발행자를 입력해주세요'),
+});
+
 const systemSettingSchema = {
-  Init, SignUp, Smtp, Webhook, Passkey,
+  Init, SignUp, Smtp, Webhook, Passkey, Otp,
 };
 
 export default systemSettingSchema;

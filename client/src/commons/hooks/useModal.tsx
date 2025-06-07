@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo, useState } from 'react';
 import { ModalTypes } from '../types/modalType';
 import ModalContainer from '../components/ModalContainer';
 import { v5 as uuidv5 } from 'uuid';
@@ -26,9 +26,11 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
       priority: prev.length + 1,
       id,
       title,
-      children,
       isOpen,
       onClose: () => onClose(id),
+      children: React.isValidElement(children)
+        ? React.cloneElement(children, { id } as any)
+        : children,
     }]);
   };
 

@@ -1,6 +1,7 @@
 package com.ardi.afarensis.config
 
 import com.ardi.afarensis.dto.request.RequestUser
+import com.ardi.afarensis.dto.response.ResponseUser
 import com.ardi.afarensis.provider.TokenProvider
 import com.ardi.afarensis.service.UserService
 import com.ardi.afarensis.util.CookieUtil
@@ -8,7 +9,6 @@ import io.jsonwebtoken.Claims
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
 import org.springframework.http.server.reactive.ServerHttpRequest
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
@@ -23,7 +23,6 @@ import java.util.*
 class AuthConverter(
     private val tokenProvider: TokenProvider,
     private val cookieUtil: CookieUtil,
-    private val mutex: Mutex,
     private val userService: UserService
 ) : ServerAuthenticationConverter {
     val ACCESS_COOKIE_NAME = "access_token"
@@ -48,6 +47,10 @@ class AuthConverter(
             val newAccessToken = exchange.response.cookies[ACCESS_COOKIE_NAME]
                 ?.firstOrNull()
                 ?.value
+
+            if (newAccessToken == null) {
+                return Mono.empty()
+            }
 
             return isValidateToken(newAccessToken)
         }
@@ -117,7 +120,16 @@ class AuthConverter(
             userAgent
         )
 
-        val signInfo = userService.publishAccessToken(req)
+        val signInfo: ResponseUser.SignIn
+
+        try {
+            signInfo = userService.publishAccessToken(req)
+        } catch (e: Exception) {
+            CoroutineScope(Dispatchers.Default).launch {
+                cookieUtil.removeCookie(exchange.response)
+            }
+            return
+        }
 
         val base64Roles =
             Base64.getEncoder()
@@ -125,7 +137,12 @@ class AuthConverter(
                 .toString(Charsets.UTF_8)
 
         listOf(
-            CookieUtil.ResponseCookieEntity("access_token", signInfo.accessToken, signInfo.accessTokenExpiresIn, true),
+            CookieUtil.ResponseCookieEntity(
+                "access_token",
+                signInfo.accessToken,
+                signInfo.accessTokenExpiresIn,
+                true
+            ),
             CookieUtil.ResponseCookieEntity(
                 "user_id", userId, signInfo.refreshTokenExpiresIn, false
             ),
@@ -140,6 +157,8 @@ class AuthConverter(
                 cookieUtil.createResponseCookie(it)
             )
         }
+
+
     }
 
 
